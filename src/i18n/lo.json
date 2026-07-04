@@ -1,0 +1,126 @@
+{
+  "app": { "name": "ລາວກີບ", "tagline": "ເງິນຂອງທ່ານ, ຕິດຕາມຢ່າງຈະແຈ້ງ" },
+  "nav": {
+    "dashboard": "ບັນຊີລາຍຮັບ-ຈ່າຍ",
+    "fixedDeposit": "ເງິນຝາກປະຈຳ",
+    "compoundInterest": "ດອກເບ້ຍທົບຕົ້ນ",
+    "profitMargin": "ອັດຕາກຳໄລ",
+    "npv": "NPV",
+    "opportunityCost": "ຕົ້ນທຶນເສຍໂອກາດ",
+    "settings": "ຕັ້ງຄ່າ",
+    "signOut": "ອອກຈາກລະບົບ"
+  },
+  "auth": {
+    "signInTitle": "ເຂົ້າສູ່ລະບົບ ລາວກີບ",
+    "signInSubtitle": "ຕິດຕາມລາຍຮັບ, ລາຍຈ່າຍ ແລະ ການລົງທຶນຂອງທ່ານໃນທີ່ດຽວ.",
+    "signInWithGoogle": "ດຳເນີນການດ້ວຍ Google",
+    "signingIn": "ກຳລັງເຂົ້າສູ່ລະບົບ…"
+  },
+  "dashboard": {
+    "title": "ບັນຊີປະຈຳເດືອນ",
+    "currentBalance": "ຍອດເງິນຄົງເຫຼືອ",
+    "openingBalance": "ຍອດເງິນຍົກມາ",
+    "income": "ລາຍຮັບ",
+    "expense": "ລາຍຈ່າຍ",
+    "addTransaction": "ບັນທຶກລາຍການ",
+    "date": "ວັນທີ",
+    "category": "ໝວດໝູ່",
+    "description": "ລາຍລະອຽດ",
+    "amount": "ຈຳນວນເງິນ",
+    "type": "ປະເພດ",
+    "currency": "ສະກຸນເງິນ",
+    "noTransactions": "ຍັງບໍ່ມີລາຍການໃນເດືອນນີ້.",
+    "exportCsv": "ສົ່ງອອກ CSV",
+    "exportExcel": "ສົ່ງອອກ Excel",
+    "rolloverNotice": "ພົບເດືອນໃໝ່ — ຍອດ {{amount}} ຍົກມາຈາກ {{month}}.",
+    "categories": {
+      "salary": "ເງິນເດືອນ",
+      "business": "ທຸລະກິດ",
+      "food": "ອາຫານ",
+      "transport": "ຄ່າເດີນທາງ",
+      "utilities": "ຄ່າສາທາລະນູປະໂພກ",
+      "rent": "ຄ່າເຊົ່າ",
+      "health": "ສຸຂະພາບ",
+      "education": "ການສຶກສາ",
+      "savings": "ເງິນອອມ",
+      "other": "ອື່ນໆ"
+    }
+  },
+  "calculators": {
+    "fixedDeposit": {
+      "title": "ຄິດໄລ່ເງິນຝາກປະຈຳ",
+      "subtitle": "ດອກເບ້ຍແບບທຳມະດາຈາກເງິນຝາກກ້ອນດຽວ",
+      "principal": "ເງິນຕົ້ນ (P)",
+      "rate": "ອັດຕາດອກເບ້ຍຕໍ່ປີ (%)",
+      "termMonths": "ໄລຍະເວລາ (ເດືອນ)",
+      "interestEarned": "ດອກເບ້ຍທີ່ໄດ້ຮັບ",
+      "maturityValue": "ມູນຄ່າເມື່ອຄົບກຳນົດ"
+    },
+    "compoundInterest": {
+      "title": "ດອກເບ້ຍທົບຕົ້ນ / ຜົນຕອບແທນຫຸ້ນ",
+      "subtitle": "ມູນຄ່າອະນາຄົດພ້ອມການຝາກປະຈຳເດືອນ",
+      "principal": "ເງິນລົງທຶນເລີ່ມຕົ້ນ (P)",
+      "monthlyDeposit": "ຝາກປະຈຳເດືອນ (PMT)",
+      "rate": "ອັດຕາດອກເບ້ຍຕໍ່ປີ (%)",
+      "years": "ໄລຍະເວລາ (ປີ)",
+      "compounding": "ຄວາມຖີ່ໃນການທົບຕົ້ນ",
+      "monthly": "ລາຍເດືອນ",
+      "quarterly": "ລາຍໄຕມາດ",
+      "annually": "ລາຍປີ",
+      "futureValue": "ມູນຄ່າອະນາຄົດ",
+      "totalContributed": "ຍອດເງິນທີ່ລົງທຶນທັງໝົດ",
+      "totalInterest": "ດອກເບ້ຍລວມທີ່ໄດ້ຮັບ"
+    },
+    "profitMargin": {
+      "title": "ອັດຕາກຳໄລສຸດທິ",
+      "subtitle": "ຄວາມສາມາດໃນການເຮັດກຳໄລເປັນເປີເຊັນຂອງລາຍຮັບ",
+      "grossRevenue": "ລາຍຮັບລວມ",
+      "netProfit": "ກຳໄລສຸດທິ",
+      "result": "ອັດຕາກຳໄລສຸດທິ"
+    },
+    "npv": {
+      "title": "ມູນຄ່າປັດຈຸບັນສຸດທິ (NPV)",
+      "subtitle": "ການວິເຄາະກະແສເງິນສົດແບບຫັກສ່ວນຫຼຸດ",
+      "initialInvestment": "ເງິນລົງທຶນເລີ່ມຕົ້ນ",
+      "discountRate": "ອັດຕາສ່ວນຫຼຸດ (%)",
+      "cashFlow": "ກະແສເງິນສົດ — ປີທີ {{year}}",
+      "addYear": "ເພີ່ມປີ",
+      "removeYear": "ລຶບອອກ",
+      "result": "NPV",
+      "verdictPositive": "NPV ເປັນບວກ — ຄາດວ່າການລົງທຶນຈະສ້າງມູນຄ່າເພີ່ມ.",
+      "verdictNegative": "NPV ເປັນລົບ — ຄາດວ່າການລົງທຶນຈະສູນເສຍມູນຄ່າ."
+    },
+    "opportunityCost": {
+      "title": "ຕາຕະລາງຕົ້ນທຶນເສຍໂອກາດ",
+      "subtitle": "ປຽບທຽບສິ່ງທີ່ທ່ານເລືອກກັບສິ່ງທີ່ທ່ານເສຍໂອກາດໄປ",
+      "chosenLabel": "ທາງເລືອກທີ່ເລືອກ",
+      "foregoneLabel": "ທາງເລືອກທີ່ເສຍໄປ",
+      "optionName": "ຊື່ທາງເລືອກ",
+      "investment": "ຈຳນວນເງິນລົງທຶນ",
+      "expectedReturn": "ຜົນຕອບແທນທີ່ຄາດໄວ້ (%)",
+      "years": "ໄລຍະເວລາ (ປີ)",
+      "absoluteReturn": "ຜົນຕອບແທນສົມບູນ",
+      "opportunityCost": "ຕົ້ນທຶນເສຍໂອກາດ",
+      "netAdvantage": "ຂໍ້ໄດ້ປຽບສຸດທິຂອງທາງເລືອກທີ່ເລືອກ",
+      "verdictChosenBetter": "ທາງເລືອກທີ່ທ່ານເລືອກໃຫ້ຜົນດີກວ່າ {{amount}}.",
+      "verdictForegoneBetter": "ທາງເລືອກທີ່ເສຍໄປຈະໃຫ້ຜົນດີກວ່າ {{amount}}."
+    }
+  },
+  "settings": {
+    "title": "ຕັ້ງຄ່າບັນຊີ",
+    "profile": "ໂປຣໄຟລ໌",
+    "name": "ຊື່",
+    "email": "ອີເມວ",
+    "primaryCurrency": "ສະກຸນເງິນຫຼັກ",
+    "language": "ພາສາ",
+    "save": "ບັນທຶກການປ່ຽນແປງ",
+    "saved": "ບັນທຶກການຕັ້ງຄ່າແລ້ວ."
+  },
+  "common": {
+    "cancel": "ຍົກເລີກ",
+    "save": "ບັນທຶກ",
+    "delete": "ລຶບ",
+    "loading": "ກຳລັງໂຫຼດ…",
+    "total": "ລວມທັງໝົດ"
+  }
+}

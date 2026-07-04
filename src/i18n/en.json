@@ -1,0 +1,126 @@
+{
+  "app": { "name": "LaoKip", "tagline": "Your money, clearly tracked" },
+  "nav": {
+    "dashboard": "Dashboard",
+    "fixedDeposit": "Fixed Deposit",
+    "compoundInterest": "Compound Interest",
+    "profitMargin": "Profit Margin",
+    "npv": "NPV",
+    "opportunityCost": "Opportunity Cost",
+    "settings": "Settings",
+    "signOut": "Sign out"
+  },
+  "auth": {
+    "signInTitle": "Sign in to LaoKip",
+    "signInSubtitle": "Track your income, expenses, and investments in one place.",
+    "signInWithGoogle": "Continue with Google",
+    "signingIn": "Signing in…"
+  },
+  "dashboard": {
+    "title": "Monthly Ledger",
+    "currentBalance": "Current balance",
+    "openingBalance": "Opening balance (rolled over)",
+    "income": "Income",
+    "expense": "Expense",
+    "addTransaction": "Add transaction",
+    "date": "Date",
+    "category": "Category",
+    "description": "Description",
+    "amount": "Amount",
+    "type": "Type",
+    "currency": "Currency",
+    "noTransactions": "No transactions yet this month.",
+    "exportCsv": "Export CSV",
+    "exportExcel": "Export Excel",
+    "rolloverNotice": "New month detected — {{amount}} carried over from {{month}}.",
+    "categories": {
+      "salary": "Salary",
+      "business": "Business",
+      "food": "Food",
+      "transport": "Transport",
+      "utilities": "Utilities",
+      "rent": "Rent",
+      "health": "Health",
+      "education": "Education",
+      "savings": "Savings",
+      "other": "Other"
+    }
+  },
+  "calculators": {
+    "fixedDeposit": {
+      "title": "Fixed Deposit Calculator",
+      "subtitle": "Simple interest on a lump-sum deposit",
+      "principal": "Principal (P)",
+      "rate": "Annual interest rate (%)",
+      "termMonths": "Term (months)",
+      "interestEarned": "Interest earned",
+      "maturityValue": "Maturity value"
+    },
+    "compoundInterest": {
+      "title": "Compound Interest / Stock ROI",
+      "subtitle": "Future value with recurring monthly deposits",
+      "principal": "Initial investment (P)",
+      "monthlyDeposit": "Monthly deposit (PMT)",
+      "rate": "Annual interest rate (%)",
+      "years": "Time (years)",
+      "compounding": "Compounding frequency",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "annually": "Annually",
+      "futureValue": "Future value",
+      "totalContributed": "Total contributed",
+      "totalInterest": "Total interest earned"
+    },
+    "profitMargin": {
+      "title": "Net Profit Margin",
+      "subtitle": "Profitability as a percentage of revenue",
+      "grossRevenue": "Gross revenue",
+      "netProfit": "Net profit",
+      "result": "Net profit margin"
+    },
+    "npv": {
+      "title": "Net Present Value (NPV)",
+      "subtitle": "Discounted cash flow analysis",
+      "initialInvestment": "Initial investment",
+      "discountRate": "Discount rate (%)",
+      "cashFlow": "Cash flow — Year {{year}}",
+      "addYear": "Add year",
+      "removeYear": "Remove",
+      "result": "NPV",
+      "verdictPositive": "Positive NPV — the investment is expected to add value.",
+      "verdictNegative": "Negative NPV — the investment is expected to destroy value."
+    },
+    "opportunityCost": {
+      "title": "Opportunity Cost Matrix",
+      "subtitle": "Compare what you chose against what you gave up",
+      "chosenLabel": "Chosen option",
+      "foregoneLabel": "Foregone option",
+      "optionName": "Option name",
+      "investment": "Investment amount",
+      "expectedReturn": "Expected return (%)",
+      "years": "Time (years)",
+      "absoluteReturn": "Absolute return",
+      "opportunityCost": "Opportunity cost",
+      "netAdvantage": "Net advantage of chosen option",
+      "verdictChosenBetter": "Your chosen option outperforms the alternative by {{amount}}.",
+      "verdictForegoneBetter": "The foregone option would have outperformed by {{amount}}."
+    }
+  },
+  "settings": {
+    "title": "Account Settings",
+    "profile": "Profile",
+    "name": "Name",
+    "email": "Email",
+    "primaryCurrency": "Primary currency",
+    "language": "Language",
+    "save": "Save changes",
+    "saved": "Settings saved."
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "loading": "Loading…",
+    "total": "Total"
+  }
+}
