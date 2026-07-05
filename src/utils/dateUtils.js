@@ -19,3 +19,9 @@ export function previousMonthKey(key) {
   const d = new Date(y, m - 2, 1); // m-1 is current month index, -1 more for previous
   return monthKey(d);
 }
+
+/** Returns the key `n` months after the given key (n may be negative). */
+export function addMonthsToKey(key, n) {
+  const [y, m] = key.split("-").map(Number);
+  return monthKey(new Date(y, m - 1 + n, 1));
+}

@@ -12,13 +12,17 @@
     "npv": "NPV",
     "opportunityCost": "Opportunity Cost",
     "settings": "Settings",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "signIn": "Sign in"
   },
   "auth": {
     "signInTitle": "Sign in to Finma",
     "signInSubtitle": "Track your income, expenses, and investments in one place.",
     "signInWithGoogle": "Continue with Google",
-    "signingIn": "Signing in…"
+    "signingIn": "Signing in…",
+    "lockedTitle": "Sign in to save your data",
+    "lockedSubtitle": "You can see how this works, but you'll need to sign in with Google before you can save or edit anything.",
+    "notSignedIn": "Not signed in"
   },
   "dashboard": {
     "title": "Monthly Ledger",

@@ -4,6 +4,7 @@ import { useLedger } from "../../hooks/useLedger";
 import { monthLabel } from "../../utils/dateUtils";
 import { exportLedger } from "../../utils/exportData";
 import { Card, ResultTile } from "../common/Card";
+import AuthGate from "../common/AuthGate";
 import TransactionForm from "./TransactionForm";
 import TransactionList from "./TransactionList";
 
@@ -61,7 +62,9 @@ export default function Dashboard() {
       </div>
 
       <Card>
-        <TransactionForm onAdd={addTransaction} />
+        <AuthGate>
+          <TransactionForm onAdd={addTransaction} />
+        </AuthGate>
       </Card>
 
       <Card>
@@ -83,7 +86,9 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="stitch-divider mb-2" />
-        <TransactionList transactions={currentTransactions} onDelete={deleteTransaction} />
+        <AuthGate>
+          <TransactionList transactions={currentTransactions} onDelete={deleteTransaction} />
+        </AuthGate>
       </Card>
     </div>
   );

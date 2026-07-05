@@ -1,0 +1,135 @@
+{
+  "app": {
+    "name": "Finma",
+    "fullName": "Finma — การจัดการการเงินส่วนบุคคล",
+    "tagline": "เงินของคุณ ติดตามได้อย่างชัดเจน"
+  },
+  "nav": {
+    "dashboard": "บัญชีรายรับ-รายจ่าย",
+    "fixedDeposit": "เงินฝากประจำ",
+    "compoundInterest": "ดอกเบี้ยทบต้น",
+    "profitMargin": "อัตรากำไร",
+    "npv": "NPV",
+    "opportunityCost": "ต้นทุนค่าเสียโอกาส",
+    "settings": "ตั้งค่า",
+    "signOut": "ออกจากระบบ",
+    "signIn": "เข้าสู่ระบบ"
+  },
+  "auth": {
+    "signInTitle": "เข้าสู่ระบบ Finma",
+    "signInSubtitle": "ติดตามรายรับ รายจ่าย และการลงทุนของคุณในที่เดียว",
+    "signInWithGoogle": "ดำเนินการต่อด้วย Google",
+    "signingIn": "กำลังเข้าสู่ระบบ…",
+    "lockedTitle": "เข้าสู่ระบบเพื่อบันทึกข้อมูล",
+    "lockedSubtitle": "คุณสามารถดูฟังก์ชันนี้ได้ แต่ต้องเข้าสู่ระบบด้วย Google ก่อนจึงจะบันทึกหรือแก้ไขข้อมูลได้",
+    "notSignedIn": "ยังไม่ได้เข้าสู่ระบบ"
+  },
+  "dashboard": {
+    "title": "บัญชีประจำเดือน",
+    "currentBalance": "ยอดเงินคงเหลือ",
+    "openingBalance": "ยอดยกมา",
+    "income": "รายรับ",
+    "expense": "รายจ่าย",
+    "addTransaction": "บันทึกรายการ",
+    "date": "วันที่",
+    "category": "หมวดหมู่",
+    "description": "รายละเอียด",
+    "amount": "จำนวนเงิน",
+    "type": "ประเภท",
+    "currency": "สกุลเงิน",
+    "noTransactions": "ยังไม่มีรายการในเดือนนี้",
+    "exportCsv": "ส่งออก CSV",
+    "exportExcel": "ส่งออก Excel",
+    "simulateRollover": "จำลองเดือนถัดไป",
+    "rolloverNotice": "ตรวจพบเดือนใหม่ — ยอด {{amount}} ยกมาจาก {{month}}",
+    "categories": {
+      "salary": "เงินเดือน",
+      "business": "ธุรกิจ",
+      "food": "อาหาร",
+      "transport": "ค่าเดินทาง",
+      "utilities": "ค่าสาธารณูปโภค",
+      "rent": "ค่าเช่า",
+      "health": "สุขภาพ",
+      "education": "การศึกษา",
+      "savings": "เงินออม",
+      "other": "อื่นๆ"
+    }
+  },
+  "calculators": {
+    "fixedDeposit": {
+      "title": "คำนวณเงินฝากประจำ",
+      "subtitle": "ดอกเบี้ยแบบธรรมดาจากเงินฝากก้อนเดียว",
+      "principal": "เงินต้น (P)",
+      "rate": "อัตราดอกเบี้ยต่อปี (%)",
+      "termMonths": "ระยะเวลา (เดือน)",
+      "interestEarned": "ดอกเบี้ยที่ได้รับ",
+      "maturityValue": "มูลค่าเมื่อครบกำหนด"
+    },
+    "compoundInterest": {
+      "title": "ดอกเบี้ยทบต้น / ผลตอบแทนหุ้น",
+      "subtitle": "มูลค่าในอนาคตพร้อมการฝากเงินรายเดือน",
+      "principal": "เงินลงทุนเริ่มต้น (P)",
+      "monthlyDeposit": "ฝากรายเดือน (PMT)",
+      "rate": "อัตราดอกเบี้ยต่อปี (%)",
+      "years": "ระยะเวลา (ปี)",
+      "compounding": "ความถี่ในการทบต้น",
+      "monthly": "รายเดือน",
+      "quarterly": "รายไตรมาส",
+      "annually": "รายปี",
+      "futureValue": "มูลค่าในอนาคต",
+      "totalContributed": "เงินลงทุนรวมทั้งหมด",
+      "totalInterest": "ดอกเบี้ยรวมที่ได้รับ"
+    },
+    "profitMargin": {
+      "title": "อัตรากำไรสุทธิ",
+      "subtitle": "ความสามารถในการทำกำไรเป็นเปอร์เซ็นต์ของรายได้",
+      "grossRevenue": "รายได้รวม",
+      "netProfit": "กำไรสุทธิ",
+      "result": "อัตรากำไรสุทธิ"
+    },
+    "npv": {
+      "title": "มูลค่าปัจจุบันสุทธิ (NPV)",
+      "subtitle": "การวิเคราะห์กระแสเงินสดแบบคิดลด",
+      "initialInvestment": "เงินลงทุนเริ่มต้น",
+      "discountRate": "อัตราคิดลด (%)",
+      "cashFlow": "กระแสเงินสด — ปีที่ {{year}}",
+      "addYear": "เพิ่มปี",
+      "removeYear": "ลบ",
+      "result": "NPV",
+      "verdictPositive": "NPV เป็นบวก — คาดว่าการลงทุนจะสร้างมูลค่าเพิ่ม",
+      "verdictNegative": "NPV เป็นลบ — คาดว่าการลงทุนจะทำให้สูญเสียมูลค่า"
+    },
+    "opportunityCost": {
+      "title": "ตารางต้นทุนค่าเสียโอกาส",
+      "subtitle": "เปรียบเทียบสิ่งที่คุณเลือกกับสิ่งที่คุณเสียโอกาสไป",
+      "chosenLabel": "ตัวเลือกที่เลือก",
+      "foregoneLabel": "ตัวเลือกที่เสียโอกาส",
+      "optionName": "ชื่อตัวเลือก",
+      "investment": "จำนวนเงินลงทุน",
+      "expectedReturn": "ผลตอบแทนที่คาดหวัง (%)",
+      "years": "ระยะเวลา (ปี)",
+      "absoluteReturn": "ผลตอบแทนที่แท้จริง",
+      "opportunityCost": "ต้นทุนค่าเสียโอกาส",
+      "netAdvantage": "ข้อได้เปรียบสุทธิของตัวเลือกที่เลือก",
+      "verdictChosenBetter": "ตัวเลือกที่คุณเลือกให้ผลตอบแทนดีกว่า {{amount}}",
+      "verdictForegoneBetter": "ตัวเลือกที่เสียโอกาสจะให้ผลตอบแทนดีกว่า {{amount}}"
+    }
+  },
+  "settings": {
+    "title": "ตั้งค่าบัญชี",
+    "profile": "โปรไฟล์",
+    "name": "ชื่อ",
+    "email": "อีเมล",
+    "primaryCurrency": "สกุลเงินหลัก",
+    "language": "ภาษา",
+    "save": "บันทึกการเปลี่ยนแปลง",
+    "saved": "บันทึกการตั้งค่าแล้ว"
+  },
+  "common": {
+    "cancel": "ยกเลิก",
+    "save": "บันทึก",
+    "delete": "ลบ",
+    "loading": "กำลังโหลด…",
+    "total": "รวมทั้งหมด"
+  }
+}

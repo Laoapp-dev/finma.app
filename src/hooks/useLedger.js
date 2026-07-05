@@ -1,137 +1,188 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { monthKey, previousMonthKey } from "../utils/dateUtils";
+import {
+  collection,
+  doc,
+  addDoc,
+  deleteDoc,
+  setDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
+import { db } from "../firebase";
+import { useAuth } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
-
-const STORAGE_KEY = "finma.ledger.v1";
+import { monthKey } from "../utils/dateUtils";
 
 /**
- * Shape persisted to storage (and, in production, to Firestore under
- * users/{uid}/monthlyCycles/{yyyy-mm} + users/{uid}/ledgerEntries/{id}):
+ * Firestore layout (see firestore.rules for the matching security rules):
+ *   users/{uid}/ledgerEntries/{entryId}   -> one document per transaction
+ *   users/{uid}/monthlyCycles/{yyyy-mm}   -> { openingBalance, closed, closingBalance }
  *
- * {
- *   cycles: {
- *     "2026-06": { openingBalance: 500000, closed: true, closingBalance: 812000 },
- *     "2026-07": { openingBalance: 812000, closed: false }
- *   },
- *   transactions: [
- *     { id, cycleKey, date, type: "income"|"expense", category, description, amount, currency }
- *   ]
- * }
+ * Queries deliberately avoid filtering by cycleKey server-side (which would
+ * need a composite index since it's combined with ordering) — instead we
+ * subscribe to the whole ledgerEntries collection (ordered by date, a
+ * single-field index Firestore creates automatically) and group by cycle
+ * client-side. That's plenty fast for a personal ledger's data volume.
  */
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    /* ignore corrupt storage */
-  }
-  const key = monthKey();
-  return {
-    cycles: { [key]: { openingBalance: 0, closed: false } },
-    transactions: [],
-  };
-}
 
-function persist(state) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+const DEMO_TRANSACTIONS = [
+  { id: "demo1", date: new Date().toISOString().slice(0, 10), type: "income", category: "salary", description: "Monthly salary", amount: 4500000, currency: "LAK" },
+  { id: "demo2", date: new Date().toISOString().slice(0, 10), type: "expense", category: "food", description: "Groceries", amount: 350000, currency: "LAK" },
+];
+
+function round2(n) {
+  return Math.round((n + Number.EPSILON) * 100) / 100;
 }
 
 export function useLedger() {
+  const { user } = useAuth();
   const { convert, currency: primaryCurrency } = useCurrency();
-  const [state, setState] = useState(loadState);
+
+  const currentKey = monthKey();
+  const [transactions, setTransactions] = useState([]);
+  const [currentCycle, setCurrentCycle] = useState({ openingBalance: 0, closed: false });
   const [rolloverNotice, setRolloverNotice] = useState(null);
+  const [loadingLedger, setLoadingLedger] = useState(Boolean(user));
 
-  // -------------------------------------------------------------------
-  // Monthly Roll-over Engine
-  // Runs on mount (and can be re-run e.g. via a daily interval/cron in
-  // production). Detects whether "now" belongs to a month that doesn't
-  // yet exist in `cycles`. If so, it closes out every prior open cycle:
-  // remaining balance = opening balance + (income - expenses), converted
-  // to the primary currency, and carries it forward as the new cycle's
-  // opening balance.
-  // -------------------------------------------------------------------
-  const runRollover = useCallback(() => {
-    setState((prev) => {
-      const currentKey = monthKey();
-      if (prev.cycles[currentKey]) return prev; // already up to date
+  const ledgerRef = useCallback(
+    () => collection(db, "users", user.uid, "ledgerEntries"),
+    [user]
+  );
+  const cyclesRef = useCallback(
+    () => collection(db, "users", user.uid, "monthlyCycles"),
+    [user]
+  );
 
-      const cycles = { ...prev.cycles };
-      const sortedOpenKeys = Object.keys(cycles)
-        .filter((k) => !cycles[k].closed)
-        .sort();
+  const netForCycle = useCallback(
+    (cycleKey, txList) =>
+      txList
+        .filter((tx) => tx.cycleKey === cycleKey)
+        .reduce((sum, tx) => {
+          const amt = convert(Number(tx.amount) || 0, tx.currency, primaryCurrency);
+          return sum + (tx.type === "income" ? amt : -amt);
+        }, 0),
+    [convert, primaryCurrency]
+  );
+
+  // ---------------------------------------------------------------------
+  // Signed OUT: read-only demo data so the page still shows what it does.
+  // AuthGate additionally dims/disables interaction, this is just content.
+  // ---------------------------------------------------------------------
+  useEffect(() => {
+    if (user) return;
+    setTransactions(DEMO_TRANSACTIONS.map((tx) => ({ ...tx, cycleKey: currentKey })));
+    setCurrentCycle({ openingBalance: 800000, closed: false });
+    setLoadingLedger(false);
+  }, [user, currentKey]);
+
+  // ---------------------------------------------------------------------
+  // Signed IN: subscribe to Firestore + run the monthly roll-over engine.
+  // ---------------------------------------------------------------------
+  useEffect(() => {
+    if (!user) return;
+    setLoadingLedger(true);
+
+    const unsubscribe = onSnapshot(
+      query(ledgerRef(), orderBy("date", "desc")),
+      (snapshot) => {
+        setTransactions(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
+        setLoadingLedger(false);
+      },
+      (err) => {
+        console.error("Ledger subscription failed:", err);
+        setLoadingLedger(false);
+      }
+    );
+
+    return unsubscribe;
+  }, [user, ledgerRef]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    async function runRollover() {
+      const currentDoc = await getDoc(doc(cyclesRef(), currentKey));
+      if (currentDoc.exists()) {
+        setCurrentCycle(currentDoc.data());
+        return;
+      }
+
+      // Current month's cycle doc doesn't exist yet — close any still-open
+      // prior cycles and carry the balance forward.
+      const openSnap = await getDocs(query(cyclesRef(), where("closed", "==", false)));
+
+      if (openSnap.empty) {
+        // First time this user has ever opened the ledger.
+        const fresh = { openingBalance: 0, closed: false };
+        await setDoc(doc(cyclesRef(), currentKey), fresh);
+        setCurrentCycle(fresh);
+        return;
+      }
+
+      const allEntriesSnap = await getDocs(ledgerRef());
+      const allEntries = allEntriesSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
       let carryBalance = 0;
       let lastClosedKey = null;
 
-      sortedOpenKeys.forEach((key) => {
-        const net = netForCycle(prev.transactions, key, convert, primaryCurrency);
-        const closingBalance = round2((cycles[key].openingBalance || 0) + net);
-        cycles[key] = { ...cycles[key], closed: true, closingBalance };
+      // Sort so cycles close in chronological order if more than one was
+      // somehow left open (e.g. the app wasn't opened for several months).
+      const openDocs = openSnap.docs.sort((a, b) => (a.id < b.id ? -1 : 1));
+
+      for (const cycleDoc of openDocs) {
+        const key = cycleDoc.id;
+        const cycleData = cycleDoc.data();
+        const net = netForCycle(key, allEntries);
+        const closingBalance = round2((cycleData.openingBalance || 0) + net);
+        await setDoc(doc(cyclesRef(), key), { ...cycleData, closed: true, closingBalance });
         carryBalance = closingBalance;
         lastClosedKey = key;
-      });
+      }
 
-      cycles[currentKey] = { openingBalance: carryBalance, closed: false };
+      const newCycle = { openingBalance: carryBalance, closed: false };
+      await setDoc(doc(cyclesRef(), currentKey), newCycle);
+      setCurrentCycle(newCycle);
 
       if (lastClosedKey) {
         setRolloverNotice({ amount: carryBalance, fromKey: lastClosedKey });
       }
+    }
 
-      const next = { ...prev, cycles };
-      persist(next);
-      return next;
-    });
-  }, [convert, primaryCurrency]);
-
-  useEffect(() => {
-    runRollover();
-    // Re-check once a day in case the tab stays open across midnight on the 1st.
-    const interval = setInterval(runRollover, 1000 * 60 * 60);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const currentKey = monthKey();
-  const currentCycle = state.cycles[currentKey] || { openingBalance: 0, closed: false };
+    runRollover().catch((err) => console.error("Roll-over failed:", err));
+  }, [user, currentKey, cyclesRef, ledgerRef, netForCycle]);
 
   const currentTransactions = useMemo(
     () =>
-      state.transactions
+      transactions
         .filter((tx) => tx.cycleKey === currentKey)
         .sort((a, b) => new Date(b.date) - new Date(a.date)),
-    [state.transactions, currentKey]
+    [transactions, currentKey]
   );
 
-  const currentBalance = useMemo(() => {
-    const net = netForCycle(state.transactions, currentKey, convert, primaryCurrency);
-    return round2((currentCycle.openingBalance || 0) + net);
-  }, [state.transactions, currentKey, currentCycle.openingBalance, convert, primaryCurrency]);
+  const currentBalance = round2((currentCycle.openingBalance || 0) + netForCycle(currentKey, transactions));
 
-  const addTransaction = useCallback((tx) => {
-    setState((prev) => {
-      const next = {
-        ...prev,
-        transactions: [
-          ...prev.transactions,
-          {
-            id: crypto.randomUUID(),
-            cycleKey: monthKey(new Date(tx.date)),
-            ...tx,
-          },
-        ],
-      };
-      persist(next);
-      return next;
-    });
-  }, []);
+  const addTransaction = useCallback(
+    async (tx) => {
+      if (!user) return; // AuthGate prevents this UI path anyway
+      await addDoc(ledgerRef(), {
+        ...tx,
+        cycleKey: monthKey(new Date(tx.date)),
+      });
+    },
+    [user, ledgerRef]
+  );
 
-  const deleteTransaction = useCallback((id) => {
-    setState((prev) => {
-      const next = { ...prev, transactions: prev.transactions.filter((t) => t.id !== id) };
-      persist(next);
-      return next;
-    });
-  }, []);
+  const deleteTransaction = useCallback(
+    async (id) => {
+      if (!user) return;
+      await deleteDoc(doc(ledgerRef(), id));
+    },
+    [user, ledgerRef]
+  );
 
   return {
     currentCycleKey: currentKey,
@@ -142,19 +193,7 @@ export function useLedger() {
     deleteTransaction,
     rolloverNotice,
     clearRolloverNotice: () => setRolloverNotice(null),
-    allTransactions: state.transactions,
+    loadingLedger,
+    isDemo: !user,
   };
-}
-
-function netForCycle(transactions, cycleKey, convert, primaryCurrency) {
-  return transactions
-    .filter((tx) => tx.cycleKey === cycleKey)
-    .reduce((sum, tx) => {
-      const amountInPrimary = convert(Number(tx.amount) || 0, tx.currency, primaryCurrency);
-      return sum + (tx.type === "income" ? amountInPrimary : -amountInPrimary);
-    }, 0);
-}
-
-function round2(n) {
-  return Math.round((n + Number.EPSILON) * 100) / 100;
 }

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="Finma — Financial Personal Management. Track income, expenses, and investments in Lao and English, with LAK/THB/USD support." />
+    <meta name="description" content="Finma — Financial Personal Management. Track income, expenses, and investments in Lao, Thai, and English, with LAK/THB/USD support." />
     <meta name="theme-color" content="#2F4C7A" />
 
     <!-- PWA -->
@@ -16,14 +16,49 @@
     <meta name="mobile-web-app-capable" content="yes" />
 
     <title>Finma — Financial Personal Management</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+    <!-- Fonts loaded non-blocking: first paint doesn't wait on them. The
+         media="print" + onload swap trick lets the browser fetch the CSS
+         without treating it as a render-blocking stylesheet. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Lao:wght@400;600;700&display=swap"
       rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Lao:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&display=swap"
+      media="print"
+      onload="this.media='all'"
     />
+
+    <style>
+      /* Critical, inline app-shell styles: paints instantly (before the JS
+         bundle finishes downloading/parsing) so the user sees a branded
+         loading state instead of a blank white screen. Cleared automatically
+         once React mounts and replaces #root's contents. */
+      html, body { background: #F7F4EC; margin: 0; }
+      #shell {
+        min-height: 100vh; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 12px;
+        font-family: system-ui, -apple-system, sans-serif; color: #16233D;
+      }
+      #shell .mark {
+        width: 44px; height: 44px; border-radius: 12px; background: #2F4C7A;
+        color: #C9A227; display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 20px;
+      }
+      #shell .spin {
+        width: 22px; height: 22px; border-radius: 999px;
+        border: 3px solid #D7E0EE; border-top-color: #2F4C7A;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body class="bg-paper text-ink font-body">
-    <div id="root"></div>
+    <div id="root">
+      <div id="shell">
+        <div class="mark">F</div>
+        <div class="spin"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -30,8 +30,8 @@ export default {
         },
       },
       fontFamily: {
-        display: ["Sora", "Noto Sans Lao", "sans-serif"],
-        body: ["Inter", "Noto Sans Lao", "sans-serif"],
+        display: ["Sora", "Noto Sans Lao", "Noto Sans Thai", "sans-serif"],
+        body: ["Inter", "Noto Sans Lao", "Noto Sans Thai", "sans-serif"],
       },
       backgroundImage: {
         "stitch-line":

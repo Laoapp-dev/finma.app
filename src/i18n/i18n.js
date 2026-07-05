@@ -1,11 +1,13 @@
 import en from "./en.json";
 import lo from "./lo.json";
+import th from "./th.json";
 
-export const LOCALES = { en, lo };
+export const LOCALES = { en, lo, th };
 
 export const SUPPORTED_LANGUAGES = [
   { code: "en", label: "English" },
   { code: "lo", label: "ພາສາລາວ" },
+  { code: "th", label: "ภาษาไทย" },
 ];
 
 /**

@@ -1,7 +1,7 @@
 {
   "name": "Finma — Financial Personal Management",
   "short_name": "Finma",
-  "description": "Track income, expenses, and investments in Lao and English, with LAK/THB/USD support.",
+  "description": "Track income, expenses, and investments in Lao, Thai, and English, with LAK/THB/USD support.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

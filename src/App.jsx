@@ -1,17 +1,21 @@
-import { useState } from "react";
-import { useAuth } from "./context/AuthContext";
+import { useState, lazy, Suspense } from "react";
 import { useLanguage } from "./context/LanguageContext";
 import { isFirebaseConfigured } from "./firebase";
 import ConfigError from "./components/common/ConfigError";
-import GoogleSignIn from "./components/Auth/GoogleSignIn";
-import Navbar from "./components/common/Navbar";
-import Dashboard from "./components/Ledger/Dashboard";
-import FixedDepositCalculator from "./components/Calculators/FixedDepositCalculator";
-import CompoundInterestCalculator from "./components/Calculators/CompoundInterestCalculator";
-import NetProfitMarginCalculator from "./components/Calculators/NetProfitMarginCalculator";
-import NPVCalculator from "./components/Calculators/NPVCalculator";
-import OpportunityCostCalculator from "./components/Calculators/OpportunityCostCalculator";
-import AccountSettings from "./components/Settings/AccountSettings";
+import Sidebar from "./components/common/Sidebar";
+import Topbar from "./components/common/Topbar";
+
+// Lazy-loaded: each page's JS is only downloaded when the user actually
+// navigates to it, instead of all being bundled into the initial payload.
+// Combined with dynamic-importing xlsx (see utils/exportData.js), this is
+// the main fix for the app feeling slow to appear on first load.
+const Dashboard = lazy(() => import("./components/Ledger/Dashboard"));
+const FixedDepositCalculator = lazy(() => import("./components/Calculators/FixedDepositCalculator"));
+const CompoundInterestCalculator = lazy(() => import("./components/Calculators/CompoundInterestCalculator"));
+const NetProfitMarginCalculator = lazy(() => import("./components/Calculators/NetProfitMarginCalculator"));
+const NPVCalculator = lazy(() => import("./components/Calculators/NPVCalculator"));
+const OpportunityCostCalculator = lazy(() => import("./components/Calculators/OpportunityCostCalculator"));
+const AccountSettings = lazy(() => import("./components/Settings/AccountSettings"));
 
 const PAGES = {
   dashboard: Dashboard,
@@ -23,35 +27,45 @@ const PAGES = {
   settings: AccountSettings,
 };
 
+function PageSpinner() {
+  return (
+    <div className="flex items-center justify-center py-24">
+      <div className="h-8 w-8 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin" />
+    </div>
+  );
+}
+
 export default function App() {
-  const { user, loading } = useAuth();
   const { t } = useLanguage();
   const [page, setPage] = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (!isFirebaseConfigured) {
     return <ConfigError />;
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-paper">
-        <p className="text-ink/50">{t("common.loading")}</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <GoogleSignIn />;
-  }
-
   const Page = PAGES[page] || Dashboard;
 
   return (
-    <div className="min-h-screen bg-paper">
-      <Navbar active={page} onNavigate={setPage} />
-      <main className="max-w-5xl mx-auto px-4 py-6">
-        <Page />
-      </main>
+    <div className="min-h-screen bg-paper md:flex">
+      <Sidebar
+        active={page}
+        onNavigate={(p) => {
+          setPage(p);
+          setSidebarOpen(false);
+        }}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+
+      <div className="flex-1 min-w-0">
+        <Topbar onMenuClick={() => setSidebarOpen(true)} pageTitle={t(`nav.${page}`)} />
+        <main className="max-w-5xl mx-auto px-4 py-6">
+          <Suspense fallback={<PageSpinner />}>
+            <Page />
+          </Suspense>
+        </main>
+      </div>
     </div>
   );
 }

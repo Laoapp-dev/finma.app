@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { Card } from "../common/Card";
+import AuthGate from "../common/AuthGate";
 
 export default function AccountSettings() {
   const { user, profile, updateProfile } = useAuth();
@@ -21,19 +22,26 @@ export default function AccountSettings() {
       <div className="space-y-6 max-w-md">
         <p className="text-ink/50 text-sm -mt-2">{t("app.fullName")}</p>
 
-        <div>
-          <h3 className="font-display font-semibold text-ink mb-3">{t("settings.profile")}</h3>
-          <div className="flex items-center gap-3 mb-4">
-            {user?.photoURL && <img src={user.photoURL} alt="" className="h-12 w-12 rounded-full" />}
-            <div>
-              <p className="font-medium text-ink">{profile?.name || user?.displayName}</p>
-              <p className="text-sm text-ink/50">{profile?.email || user?.email}</p>
+        <AuthGate>
+          <div>
+            <h3 className="font-display font-semibold text-ink mb-3">{t("settings.profile")}</h3>
+            <div className="flex items-center gap-3 mb-4">
+              {(profile?.photoURL || user?.photoURL) && (
+                <img src={profile?.photoURL || user?.photoURL} alt="" className="h-12 w-12 rounded-full" />
+              )}
+              <div>
+                <p className="font-medium text-ink">{profile?.name || user?.displayName}</p>
+                <p className="text-sm text-ink/50">{profile?.email || user?.email}</p>
+              </div>
             </div>
           </div>
-        </div>
+        </AuthGate>
 
         <div className="stitch-divider" />
 
+        {/* Currency + language are local display preferences, so guests can
+            use them freely to preview the app in their own language before
+            deciding to sign in. */}
         <div>
           <label className="label">{t("settings.primaryCurrency")}</label>
           <select className="input" value={currency} onChange={(e) => setCurrency(e.target.value)}>
@@ -56,11 +64,12 @@ export default function AccountSettings() {
           </select>
         </div>
 
-        <button className="btn-primary" onClick={handleSave}>
-          {t("settings.save")}
-        </button>
-
-        {saved && <p className="text-bamboo text-sm">{t("settings.saved")}</p>}
+        <AuthGate>
+          <button className="btn-primary" onClick={handleSave}>
+            {t("settings.save")}
+          </button>
+          {saved && <p className="text-bamboo text-sm mt-2">{t("settings.saved")}</p>}
+        </AuthGate>
       </div>
     </Card>
   );
