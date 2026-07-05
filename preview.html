@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LaoKip — Personal Finance (Preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Lao:wght@400;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink: "#16233D",
+          indigo: { DEFAULT: "#2F4C7A", 50: "#EEF2F8", 100: "#D7E0EE", 600: "#2F4C7A", 700: "#233A5F" },
+          gold: { DEFAULT: "#C9A227", 50: "#FBF6E7", 600: "#C9A227", 700: "#A6841D" },
+          paper: "#F7F4EC",
+          bamboo: { DEFAULT: "#4E7D5D", 50: "#EAF2ED" },
+          lotus: { DEFAULT: "#B85C55", 50: "#F8ECEB" },
+        },
+        fontFamily: {
+          display: ["Sora", "Noto Sans Lao", "sans-serif"],
+          body: ["Inter", "Noto Sans Lao", "sans-serif"],
+        },
+        backgroundImage: {
+          "stitch-line": "repeating-linear-gradient(90deg, currentColor 0 8px, transparent 8px 16px)",
+        },
+      },
+    },
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { background: #F7F4EC; color: #16233D; font-family: 'Inter','Noto Sans Lao',sans-serif; }
+  .stitch-divider { height: 1px; width: 100%; color: #D7E0EE; background-image: repeating-linear-gradient(90deg, currentColor 0 8px, transparent 8px 16px); }
+  .card { background: #fff; border-radius: 1rem; border: 1px solid #D7E0EE; box-shadow: 0 1px 2px rgba(0,0,0,0.03); padding: 1.25rem; }
+  .btn-primary { background: #2F4C7A; color: #fff; font-family: 'Sora',sans-serif; font-weight: 600; border-radius: 0.75rem; padding: 0.6rem 1rem; transition: background .15s; }
+  .btn-primary:hover { background: #233A5F; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-secondary { background: #fff; color: #2F4C7A; border: 1px solid #D7E0EE; font-family: 'Sora',sans-serif; font-weight: 600; border-radius: 0.75rem; padding: 0.6rem 1rem; transition: background .15s; }
+  .btn-secondary:hover { background: #EEF2F8; }
+  .input { width: 100%; border-radius: 0.75rem; border: 1px solid #D7E0EE; background: #fff; padding: 0.6rem 0.75rem; outline: none; transition: border-color .15s, box-shadow .15s; }
+  .input:focus { border-color: #2F4C7A; box-shadow: 0 0 0 1px #2F4C7A; }
+  .label { display: block; font-size: 0.875rem; font-weight: 500; color: rgba(22,35,61,.7); margin-bottom: 0.25rem; }
+  :focus-visible { outline: 2px solid #C9A227; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect, useCallback, createContext, useContext } = React;
+
+/* ============================= i18n ============================= */
+const LOCALES = {
+  en: {
+    app: { name: "LaoKip", tagline: "Your money, clearly tracked" },
+    nav: { dashboard: "Dashboard", fixedDeposit: "Fixed Deposit", compoundInterest: "Compound Interest",
+      profitMargin: "Profit Margin", npv: "NPV", opportunityCost: "Opportunity Cost", settings: "Settings", signOut: "Sign out" },
+    auth: { signInTitle: "Sign in to LaoKip", signInSubtitle: "Track your income, expenses, and investments in one place.",
+      signInWithGoogle: "Continue with Google", signingIn: "Signing in…" },
+    dashboard: { title: "Monthly Ledger", currentBalance: "Current balance", openingBalance: "Opening balance (rolled over)",
+      income: "Income", expense: "Expense", addTransaction: "Add transaction", date: "Date", category: "Category",
+      description: "Description", amount: "Amount", type: "Type", currency: "Currency", noTransactions: "No transactions yet this month.",
+      exportCsv: "Export CSV", exportExcel: "Export Excel", simulateRollover: "Simulate next month",
+      rolloverNotice: "New month simulated — {{amount}} carried over from {{month}}.",
+      categories: { salary: "Salary", business: "Business", food: "Food", transport: "Transport", utilities: "Utilities",
+        rent: "Rent", health: "Health", education: "Education", savings: "Savings", other: "Other" } },
+    calculators: {
+      fixedDeposit: { title: "Fixed Deposit Calculator", subtitle: "Simple interest on a lump-sum deposit",
+        principal: "Principal (P)", rate: "Annual interest rate (%)", termMonths: "Term (months)",
+        interestEarned: "Interest earned", maturityValue: "Maturity value" },
+      compoundInterest: { title: "Compound Interest / Stock ROI", subtitle: "Future value with recurring monthly deposits",
+        principal: "Initial investment (P)", monthlyDeposit: "Monthly deposit (PMT)", rate: "Annual interest rate (%)",
+        years: "Time (years)", compounding: "Compounding frequency", monthly: "Monthly", quarterly: "Quarterly", annually: "Annually",
+        futureValue: "Future value", totalContributed: "Total contributed", totalInterest: "Total interest earned" },
+      profitMargin: { title: "Net Profit Margin", subtitle: "Profitability as a percentage of revenue",
+        grossRevenue: "Gross revenue", netProfit: "Net profit", result: "Net profit margin" },
+      npv: { title: "Net Present Value (NPV)", subtitle: "Discounted cash flow analysis", initialInvestment: "Initial investment",
+        discountRate: "Discount rate (%)", cashFlow: "Cash flow — Year {{year}}", addYear: "Add year", removeYear: "Remove",
+        result: "NPV", verdictPositive: "Positive NPV — the investment is expected to add value.",
+        verdictNegative: "Negative NPV — the investment is expected to destroy value." },
+      opportunityCost: { title: "Opportunity Cost Matrix", subtitle: "Compare what you chose against what you gave up",
+        chosenLabel: "Chosen option", foregoneLabel: "Foregone option", optionName: "Option name", investment: "Investment amount",
+        expectedReturn: "Expected return (%)", years: "Time (years)", absoluteReturn: "Absolute return",
+        opportunityCost: "Opportunity cost", netAdvantage: "Net advantage of chosen option",
+        verdictChosenBetter: "Your chosen option outperforms the alternative by {{amount}}.",
+        verdictForegoneBetter: "The foregone option would have outperformed by {{amount}}." } },
+    settings: { title: "Account Settings", profile: "Profile", name: "Name", email: "Email",
+      primaryCurrency: "Primary currency", language: "Language", save: "Save changes", saved: "Settings saved." },
+    common: { cancel: "Cancel", save: "Save", delete: "Delete", loading: "Loading…", total: "Total" }
+  },
+  lo: {
+    app: { name: "ລາວກີບ", tagline: "ເງິນຂອງທ່ານ, ຕິດຕາມຢ່າງຈະແຈ້ງ" },
+    nav: { dashboard: "ບັນຊີລາຍຮັບ-ຈ່າຍ", fixedDeposit: "ເງິນຝາກປະຈຳ", compoundInterest: "ດອກເບ້ຍທົບຕົ້ນ",
+      profitMargin: "ອັດຕາກຳໄລ", npv: "NPV", opportunityCost: "ຕົ້ນທຶນເສຍໂອກາດ", settings: "ຕັ້ງຄ່າ", signOut: "ອອກຈາກລະບົບ" },
+    auth: { signInTitle: "ເຂົ້າສູ່ລະບົບ ລາວກີບ", signInSubtitle: "ຕິດຕາມລາຍຮັບ, ລາຍຈ່າຍ ແລະ ການລົງທຶນຂອງທ່ານໃນທີ່ດຽວ.",
+      signInWithGoogle: "ດຳເນີນການດ້ວຍ Google", signingIn: "ກຳລັງເຂົ້າສູ່ລະບົບ…" },
+    dashboard: { title: "ບັນຊີປະຈຳເດືອນ", currentBalance: "ຍອດເງິນຄົງເຫຼືອ", openingBalance: "ຍອດເງິນຍົກມາ",
+      income: "ລາຍຮັບ", expense: "ລາຍຈ່າຍ", addTransaction: "ບັນທຶກລາຍການ", date: "ວັນທີ", category: "ໝວດໝູ່",
+      description: "ລາຍລະອຽດ", amount: "ຈຳນວນເງິນ", type: "ປະເພດ", currency: "ສະກຸນເງິນ", noTransactions: "ຍັງບໍ່ມີລາຍການໃນເດືອນນີ້.",
+      exportCsv: "ສົ່ງອອກ CSV", exportExcel: "ສົ່ງອອກ Excel", simulateRollover: "ຈຳລອງເດືອນຖັດໄປ",
+      rolloverNotice: "ຈຳລອງເດືອນໃໝ່ — ຍອດ {{amount}} ຍົກມາຈາກ {{month}}.",
+      categories: { salary: "ເງິນເດືອນ", business: "ທຸລະກິດ", food: "ອາຫານ", transport: "ຄ່າເດີນທາງ", utilities: "ຄ່າສາທາລະນູປະໂພກ",
+        rent: "ຄ່າເຊົ່າ", health: "ສຸຂະພາບ", education: "ການສຶກສາ", savings: "ເງິນອອມ", other: "ອື່ນໆ" } },
+    calculators: {
+      fixedDeposit: { title: "ຄິດໄລ່ເງິນຝາກປະຈຳ", subtitle: "ດອກເບ້ຍແບບທຳມະດາຈາກເງິນຝາກກ້ອນດຽວ",
+        principal: "ເງິນຕົ້ນ (P)", rate: "ອັດຕາດອກເບ້ຍຕໍ່ປີ (%)", termMonths: "ໄລຍະເວລາ (ເດືອນ)",
+        interestEarned: "ດອກເບ້ຍທີ່ໄດ້ຮັບ", maturityValue: "ມູນຄ່າເມື່ອຄົບກຳນົດ" },
+      compoundInterest: { title: "ດອກເບ້ຍທົບຕົ້ນ / ຜົນຕອບແທນຫຸ້ນ", subtitle: "ມູນຄ່າອະນາຄົດພ້ອມການຝາກປະຈຳເດືອນ",
+        principal: "ເງິນລົງທຶນເລີ່ມຕົ້ນ (P)", monthlyDeposit: "ຝາກປະຈຳເດືອນ (PMT)", rate: "ອັດຕາດອກເບ້ຍຕໍ່ປີ (%)",
+        years: "ໄລຍະເວລາ (ປີ)", compounding: "ຄວາມຖີ່ໃນການທົບຕົ້ນ", monthly: "ລາຍເດືອນ", quarterly: "ລາຍໄຕມາດ", annually: "ລາຍປີ",
+        futureValue: "ມູນຄ່າອະນາຄົດ", totalContributed: "ຍອດເງິນທີ່ລົງທຶນທັງໝົດ", totalInterest: "ດອກເບ້ຍລວມທີ່ໄດ້ຮັບ" },
+      profitMargin: { title: "ອັດຕາກຳໄລສຸດທິ", subtitle: "ຄວາມສາມາດໃນການເຮັດກຳໄລເປັນເປີເຊັນຂອງລາຍຮັບ",
+        grossRevenue: "ລາຍຮັບລວມ", netProfit: "ກຳໄລສຸດທິ", result: "ອັດຕາກຳໄລສຸດທິ" },
+      npv: { title: "ມູນຄ່າປັດຈຸບັນສຸດທິ (NPV)", subtitle: "ການວິເຄາະກະແສເງິນສົດແບບຫັກສ່ວນຫຼຸດ", initialInvestment: "ເງິນລົງທຶນເລີ່ມຕົ້ນ",
+        discountRate: "ອັດຕາສ່ວນຫຼຸດ (%)", cashFlow: "ກະແສເງິນສົດ — ປີທີ {{year}}", addYear: "ເພີ່ມປີ", removeYear: "ລຶບອອກ",
+        result: "NPV", verdictPositive: "NPV ເປັນບວກ — ຄາດວ່າການລົງທຶນຈະສ້າງມູນຄ່າເພີ່ມ.",
+        verdictNegative: "NPV ເປັນລົບ — ຄາດວ່າການລົງທຶນຈະສູນເສຍມູນຄ່າ." },
+      opportunityCost: { title: "ຕາຕະລາງຕົ້ນທຶນເສຍໂອກາດ", subtitle: "ປຽບທຽບສິ່ງທີ່ທ່ານເລືອກກັບສິ່ງທີ່ທ່ານເສຍໂອກາດໄປ",
+        chosenLabel: "ທາງເລືອກທີ່ເລືອກ", foregoneLabel: "ທາງເລືອກທີ່ເສຍໄປ", optionName: "ຊື່ທາງເລືອກ", investment: "ຈຳນວນເງິນລົງທຶນ",
+        expectedReturn: "ຜົນຕອບແທນທີ່ຄາດໄວ້ (%)", years: "ໄລຍະເວລາ (ປີ)", absoluteReturn: "ຜົນຕອບແທນສົມບູນ",
+        opportunityCost: "ຕົ້ນທຶນເສຍໂອກາດ", netAdvantage: "ຂໍ້ໄດ້ປຽບສຸດທິຂອງທາງເລືອກທີ່ເລືອກ",
+        verdictChosenBetter: "ທາງເລືອກທີ່ທ່ານເລືອກໃຫ້ຜົນດີກວ່າ {{amount}}.",
+        verdictForegoneBetter: "ທາງເລືອກທີ່ເສຍໄປຈະໃຫ້ຜົນດີກວ່າ {{amount}}." } },
+    settings: { title: "ຕັ້ງຄ່າບັນຊີ", profile: "ໂປຣໄຟລ໌", name: "ຊື່", email: "ອີເມວ",
+      primaryCurrency: "ສະກຸນເງິນຫຼັກ", language: "ພາສາ", save: "ບັນທຶກການປ່ຽນແປງ", saved: "ບັນທຶກການຕັ້ງຄ່າແລ້ວ." },
+    common: { cancel: "ຍົກເລີກ", save: "ບັນທຶກ", delete: "ລຶບ", loading: "ກຳລັງໂຫຼດ…", total: "ລວມທັງໝົດ" }
+  }
+};
+const SUPPORTED_LANGUAGES = [{ code: "en", label: "English" }, { code: "lo", label: "ພາສາລາວ" }];
+
+function translate(lang, key, vars) {
+  vars = vars || {};
+  const dig = (dict) => key.split(".").reduce((acc, p) => (acc && acc[p] !== undefined ? acc[p] : undefined), dict);
+  let str = dig(LOCALES[lang]) ?? dig(LOCALES.en) ?? key;
+  Object.entries(vars).forEach(([k, v]) => { str = str.replace(new RegExp(`{{${k}}}`, "g"), v); });
+  return str;
+}
+
+const LanguageContext = createContext(null);
+function LanguageProvider({ children }) {
+  const [language, setLanguage] = useState("en");
+  const t = useCallback((key, vars) => translate(language, key, vars), [language]);
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t, supportedLanguages: SUPPORTED_LANGUAGES }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+const useLanguage = () => useContext(LanguageContext);
+
+/* ============================= Currency ============================= */
+const CURRENCIES = {
+  LAK: { code: "LAK", symbol: "₭", decimals: 0, locale: "lo-LA" },
+  THB: { code: "THB", symbol: "฿", decimals: 2, locale: "th-TH" },
+  USD: { code: "USD", symbol: "$", decimals: 2, locale: "en-US" },
+};
+const RATES_TO_USD = { LAK: 1 / 21000, THB: 1 / 36, USD: 1 };
+function convertCurrency(amount, from, to) {
+  if (from === to) return amount;
+  return (amount * RATES_TO_USD[from]) / RATES_TO_USD[to];
+}
+function formatCurrency(amount, code) {
+  const meta = CURRENCIES[code] || CURRENCIES.USD;
+  const formatted = Number(amount || 0).toLocaleString(meta.locale, { minimumFractionDigits: meta.decimals, maximumFractionDigits: meta.decimals });
+  return `${meta.symbol}${formatted}`;
+}
+
+const CurrencyContext = createContext(null);
+function CurrencyProvider({ children }) {
+  const [currency, setCurrency] = useState("LAK");
+  const convert = useCallback((amount, from, to) => convertCurrency(amount, from, to || currency), [currency]);
+  const format = useCallback((amount, code) => formatCurrency(amount, code || currency), [currency]);
+  return (
+    <CurrencyContext.Provider value={{ currency, setCurrency, convert, format, currencies: CURRENCIES }}>
+      {children}
+    </CurrencyContext.Provider>
+  );
+}
+const useCurrency = () => useContext(CurrencyContext);
+
+/* ============================= Finance formulas ============================= */
+function round2(n) { return Math.round((n + Number.EPSILON) * 100) / 100; }
+
+function calculateFixedDeposit({ principal, annualRatePct, termMonths }) {
+  const P = Number(principal) || 0, r = Number(annualRatePct) || 0, t = Number(termMonths) || 0;
+  const interestEarned = P * (r / 100) * (t / 12);
+  return { interestEarned: round2(interestEarned), maturityValue: round2(P + interestEarned) };
+}
+
+function calculateCompoundInterest({ principal, monthlyDeposit, annualRatePct, years, compoundingPerYear }) {
+  const P = Number(principal) || 0, PMT = Number(monthlyDeposit) || 0, r = (Number(annualRatePct) || 0) / 100;
+  const t = Number(years) || 0, n = Number(compoundingPerYear) || 12;
+  const periods = n * t, ratePerPeriod = r / n, depositsPerPeriod = PMT * (12 / n);
+  const growthFactor = ratePerPeriod === 0 ? 1 : Math.pow(1 + ratePerPeriod, periods);
+  const futureValueLumpSum = P * growthFactor;
+  const futureValueDeposits = ratePerPeriod === 0 ? depositsPerPeriod * periods : depositsPerPeriod * ((growthFactor - 1) / ratePerPeriod);
+  const futureValue = futureValueLumpSum + futureValueDeposits;
+  const totalContributed = P + depositsPerPeriod * periods;
+  return { futureValue: round2(futureValue), totalContributed: round2(totalContributed), totalInterest: round2(futureValue - totalContributed) };
+}
+
+function calculateNetProfitMargin({ grossRevenue, netProfit }) {
+  const revenue = Number(grossRevenue) || 0, profit = Number(netProfit) || 0;
+  if (revenue === 0) return { marginPct: 0 };
+  return { marginPct: round2((profit / revenue) * 100) };
+}
+
+function calculateNPV({ initialInvestment, discountRatePct, cashFlows }) {
+  const investment = Number(initialInvestment) || 0, r = (Number(discountRatePct) || 0) / 100;
+  const discountedFlows = (cashFlows || []).map((cf, idx) => {
+    const t = idx + 1, flow = Number(cf) || 0, presentValue = flow / Math.pow(1 + r, t);
+    return { year: t, cashFlow: flow, presentValue: round2(presentValue) };
+  });
+  const totalPresentValue = discountedFlows.reduce((s, row) => s + row.presentValue, 0);
+  const npv = totalPresentValue - investment;
+  return { npv: round2(npv), isPositive: npv >= 0, discountedFlows };
+}
+
+function compoundFV(investment, ratePct, years) {
+  return (Number(investment) || 0) * Math.pow(1 + (Number(ratePct) || 0) / 100, Number(years) || 0);
+}
+function calculateOpportunityCost({ chosen, foregone }) {
+  const chosenFV = compoundFV(chosen.investment, chosen.expectedReturnPct, chosen.years);
+  const foregoneFV = compoundFV(foregone.investment, foregone.expectedReturnPct, foregone.years);
+  const chosenReturn = chosenFV - (Number(chosen.investment) || 0);
+  const foregoneReturn = foregoneFV - (Number(foregone.investment) || 0);
+  const opportunityCost = foregoneReturn - chosenReturn;
+  const netAdvantage = -opportunityCost;
+  return {
+    chosen: { futureValue: round2(chosenFV), absoluteReturn: round2(chosenReturn) },
+    foregone: { futureValue: round2(foregoneFV), absoluteReturn: round2(foregoneReturn) },
+    opportunityCost: round2(opportunityCost), netAdvantage: round2(netAdvantage), chosenIsBetter: netAdvantage >= 0,
+  };
+}
+
+/* ============================= Date helpers ============================= */
+function monthKey(date) { const d = date ? new Date(date) : new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; }
+function monthLabel(key) { const [y, m] = key.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" }); }
+function addMonthsToKey(key, n) { const [y, m] = key.split("-").map(Number); return monthKey(new Date(y, m - 1 + n, 1)); }
+
+/* ============================= Export helpers ============================= */
+function exportToCsv(rows, filename) {
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const csv = XLSX.utils.sheet_to_csv(ws);
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  downloadBlob(blob, filename);
+}
+function exportToExcel(rows, filename, sheetName) {
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName || "Sheet1");
+  XLSX.writeFile(wb, filename);
+}
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+/* ============================= Shared UI ============================= */
+function Card({ title, subtitle, children }) {
+  return (
+    <div className="card">
+      {(title || subtitle) && (
+        <div className="mb-4">
+          {title && <h2 className="font-display font-bold text-xl text-ink">{title}</h2>}
+          {subtitle && <p className="text-ink/60 text-sm mt-0.5">{subtitle}</p>}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+function ResultTile({ label, value, tone }) {
+  const toneClasses = {
+    indigo: "bg-indigo-50 text-indigo-700", gold: "bg-gold-50 text-gold-700",
+    bamboo: "bg-bamboo-50 text-bamboo", lotus: "bg-lotus-50 text-lotus",
+  };
+  return (
+    <div className={`rounded-xl px-4 py-3 ${toneClasses[tone] || toneClasses.indigo}`}>
+      <p className="text-xs uppercase tracking-wide opacity-70 mb-0.5">{label}</p>
+      <p className="font-display font-bold text-xl">{value}</p>
+    </div>
+  );
+}
+function Field({ label, value, onChange, step }) {
+  return (
+    <div>
+      <label className="label">{label}</label>
+      <input type="number" step={step || "1"} className="input" value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </div>
+  );
+}
+
+/* ============================= Mock auth ============================= */
+const AuthContext = createContext(null);
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const signInWithGoogle = useCallback(() => {
+    setLoading(true);
+    setTimeout(() => {
+      setUser({ name: "Sompasong V.", email: "sompasong@example.com", photoURL: "" });
+      setLoading(false);
+    }, 600);
+  }, []);
+  const signOut = useCallback(() => setUser(null), []);
+  return <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut }}>{children}</AuthContext.Provider>;
+}
+const useAuth = () => useContext(AuthContext);
+
+function GoogleSignIn() {
+  const { signInWithGoogle, loading } = useAuth();
+  const { t } = useLanguage();
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-paper px-4">
+      <div className="card max-w-sm w-full text-center">
+        <h1 className="font-display text-2xl font-bold text-ink mb-1">{t("auth.signInTitle")}</h1>
+        <p className="text-ink/60 mb-6">{t("auth.signInSubtitle")}</p>
+        <div className="stitch-divider mb-6" />
+        <button onClick={signInWithGoogle} disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+            <path fill="#fff" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.87 2.7-6.62z" />
+            <path fill="#fff" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 0 0 9 18z" />
+            <path fill="#fff" d="M3.95 10.7A5.4 5.4 0 0 1 3.66 9c0-.59.1-1.16.29-1.7V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.03l2.99-2.33z" />
+            <path fill="#fff" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.97l2.99 2.33C4.66 5.17 6.65 3.58 9 3.58z" />
+          </svg>
+          {loading ? t("auth.signingIn") : t("auth.signInWithGoogle")}
+        </button>
+        <p className="text-ink/30 text-xs mt-4">Preview mode — sign-in is simulated, no real Google account is used.</p>
+      </div>
+    </div>
+  );
+}
+
+/* ============================= Navbar ============================= */
+const TABS = ["dashboard", "fixedDeposit", "compoundInterest", "profitMargin", "npv", "opportunityCost", "settings"];
+function Navbar({ active, onNavigate }) {
+  const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  return (
+    <header className="bg-white border-b border-indigo-100 sticky top-0 z-10">
+      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-display font-bold">₭</div>
+          <span className="font-display font-bold text-lg text-ink">{t("app.name")}</span>
+        </div>
+        <nav className="hidden md:flex items-center gap-1 overflow-x-auto">
+          {TABS.map((tab) => (
+            <button key={tab} onClick={() => onNavigate(tab)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${active === tab ? "bg-indigo-50 text-indigo-700" : "text-ink/60 hover:text-ink hover:bg-indigo-50/60"}`}>
+              {t(`nav.${tab}`)}
+            </button>
+          ))}
+        </nav>
+        <div className="flex items-center gap-3">
+          <span className="hidden sm:inline text-sm text-ink/60">{user?.name}</span>
+          <button onClick={signOut} className="text-sm text-ink/60 hover:text-lotus transition-colors">{t("nav.signOut")}</button>
+        </div>
+      </div>
+      <nav className="md:hidden flex gap-1 overflow-x-auto px-4 pb-2">
+        {TABS.map((tab) => (
+          <button key={tab} onClick={() => onNavigate(tab)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${active === tab ? "bg-indigo-50 text-indigo-700" : "text-ink/60"}`}>
+            {t(`nav.${tab}`)}
+          </button>
+        ))}
+      </nav>
+    </header>
+  );
+}
+
+/* ============================= Ledger ============================= */
+const CATEGORY_KEYS = ["salary", "business", "food", "transport", "utilities", "rent", "health", "education", "savings", "other"];
+
+function useLedger() {
+  const { convert, currency: primaryCurrency } = useCurrency();
+  const initialKey = monthKey();
+  const [cycles, setCycles] = useState({ [initialKey]: { openingBalance: 800000, closed: false } });
+  const [transactions, setTransactions] = useState([
+    { id: "seed1", cycleKey: initialKey, date: new Date().toISOString().slice(0, 10), type: "income", category: "salary", description: "Monthly salary", amount: 4500000, currency: "LAK" },
+    { id: "seed2", cycleKey: initialKey, date: new Date().toISOString().slice(0, 10), type: "expense", category: "food", description: "Groceries", amount: 350000, currency: "LAK" },
+  ]);
+  const [rolloverNotice, setRolloverNotice] = useState(null);
+  const [currentKey, setCurrentKey] = useState(initialKey);
+
+  const netForCycle = useCallback((cycleKey) => {
+    return transactions.filter((tx) => tx.cycleKey === cycleKey).reduce((sum, tx) => {
+      const amt = convert(Number(tx.amount) || 0, tx.currency, primaryCurrency);
+      return sum + (tx.type === "income" ? amt : -amt);
+    }, 0);
+  }, [transactions, convert, primaryCurrency]);
+
+  const simulateNextMonth = useCallback(() => {
+    const net = netForCycle(currentKey);
+    const closingBalance = round2((cycles[currentKey].openingBalance || 0) + net);
+    const nextKey = addMonthsToKey(currentKey, 1);
+    setCycles((prev) => ({ ...prev, [currentKey]: { ...prev[currentKey], closed: true, closingBalance }, [nextKey]: { openingBalance: closingBalance, closed: false } }));
+    setRolloverNotice({ amount: closingBalance, fromKey: currentKey });
+    setCurrentKey(nextKey);
+  }, [cycles, currentKey, netForCycle]);
+
+  const currentCycle = cycles[currentKey] || { openingBalance: 0, closed: false };
+  const currentTransactions = useMemo(() => transactions.filter((tx) => tx.cycleKey === currentKey).sort((a, b) => new Date(b.date) - new Date(a.date)), [transactions, currentKey]);
+  const currentBalance = round2((currentCycle.openingBalance || 0) + netForCycle(currentKey));
+
+  const addTransaction = useCallback((tx) => {
+    setTransactions((prev) => [...prev, { id: `tx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, cycleKey: currentKey, ...tx }]);
+  }, [currentKey]);
+
+  const deleteTransaction = useCallback((id) => setTransactions((prev) => prev.filter((t) => t.id !== id)), []);
+
+  return { currentCycleKey: currentKey, currentCycle, currentTransactions, currentBalance, addTransaction, deleteTransaction, rolloverNotice, clearRolloverNotice: () => setRolloverNotice(null), simulateNextMonth };
+}
+
+function TransactionForm({ onAdd }) {
+  const { t } = useLanguage();
+  const { currencies, currency: defaultCurrency } = useCurrency();
+  const [form, setForm] = useState({ date: new Date().toISOString().slice(0, 10), type: "expense", category: "food", description: "", amount: "", currency: defaultCurrency });
+  const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.amount || Number(form.amount) <= 0) return;
+    onAdd({ ...form, amount: Number(form.amount) });
+    setForm((f) => ({ ...f, description: "", amount: "" }));
+  };
+  return (
+    <form onSubmit={handleSubmit} className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+      <div className="col-span-1"><label className="label">{t("dashboard.date")}</label><input type="date" className="input" value={form.date} onChange={update("date")} /></div>
+      <div className="col-span-1"><label className="label">{t("dashboard.type")}</label>
+        <select className="input" value={form.type} onChange={update("type")}>
+          <option value="income">{t("dashboard.income")}</option><option value="expense">{t("dashboard.expense")}</option>
+        </select></div>
+      <div className="col-span-1"><label className="label">{t("dashboard.category")}</label>
+        <select className="input" value={form.category} onChange={update("category")}>
+          {CATEGORY_KEYS.map((c) => <option key={c} value={c}>{t(`dashboard.categories.${c}`)}</option>)}
+        </select></div>
+      <div className="col-span-2 md:col-span-1"><label className="label">{t("dashboard.description")}</label><input type="text" className="input" value={form.description} onChange={update("description")} /></div>
+      <div className="col-span-1"><label className="label">{t("dashboard.amount")}</label><input type="number" min="0" step="0.01" className="input" value={form.amount} onChange={update("amount")} /></div>
+      <div className="col-span-1"><select className="input" value={form.currency} onChange={update("currency")}>
+        {Object.values(currencies).map((c) => <option key={c.code} value={c.code}>{c.symbol} {c.code}</option>)}
+      </select></div>
+      <div className="col-span-2 md:col-span-6"><button type="submit" className="btn-primary w-full md:w-auto">{t("dashboard.addTransaction")}</button></div>
+    </form>
+  );
+}
+
+function TransactionList({ transactions, onDelete }) {
+  const { t } = useLanguage();
+  if (transactions.length === 0) return <p className="text-ink/50 text-sm py-6 text-center">{t("dashboard.noTransactions")}</p>;
+  return (
+    <div className="divide-y divide-indigo-50">
+      {transactions.map((tx) => (
+        <div key={tx.id} className="flex items-center justify-between py-3 gap-3">
+          <div className="min-w-0">
+            <p className="font-medium text-ink truncate">{tx.description || t(`dashboard.categories.${tx.category}`)}</p>
+            <p className="text-xs text-ink/50">{tx.date} · {t(`dashboard.categories.${tx.category}`)}</p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <span className={`font-display font-semibold ${tx.type === "income" ? "text-bamboo" : "text-lotus"}`}>
+              {tx.type === "income" ? "+" : "-"}{formatCurrency(tx.amount, tx.currency)}
+            </span>
+            <button onClick={() => onDelete(tx.id)} className="text-ink/30 hover:text-lotus transition-colors text-sm" aria-label={t("common.delete")}>✕</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Dashboard() {
+  const { t } = useLanguage();
+  const { format, currency } = useCurrency();
+  const { currentCycleKey, currentCycle, currentTransactions, currentBalance, addTransaction, deleteTransaction, rolloverNotice, clearRolloverNotice, simulateNextMonth } = useLedger();
+  const income = currentTransactions.filter((x) => x.type === "income").reduce((s, x) => s + Number(x.amount), 0);
+  const expense = currentTransactions.filter((x) => x.type === "expense").reduce((s, x) => s + Number(x.amount), 0);
+
+  return (
+    <div className="space-y-6">
+      {rolloverNotice && (
+        <div className="rounded-xl bg-gold-50 border border-gold-600/30 px-4 py-3 flex items-center justify-between">
+          <p className="text-sm text-ink">{t("dashboard.rolloverNotice", { amount: format(rolloverNotice.amount, currency), month: monthLabel(rolloverNotice.fromKey) })}</p>
+          <button onClick={clearRolloverNotice} className="text-ink/40 hover:text-ink">✕</button>
+        </div>
+      )}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="font-display font-bold text-2xl text-ink">{t("dashboard.title")}</h1>
+          <p className="text-ink/50 text-sm">{monthLabel(currentCycleKey)}</p>
+        </div>
+        <button onClick={simulateNextMonth} className="btn-secondary text-sm">→ {t("dashboard.simulateRollover")}</button>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <ResultTile label={t("dashboard.currentBalance")} value={format(currentBalance)} tone="indigo" />
+        <ResultTile label={t("dashboard.openingBalance")} value={format(currentCycle.openingBalance || 0)} tone="gold" />
+        <ResultTile label={t("dashboard.income")} value={format(income)} tone="bamboo" />
+        <ResultTile label={t("dashboard.expense")} value={format(expense)} tone="lotus" />
+      </div>
+      <Card><TransactionForm onAdd={addTransaction} /></Card>
+      <Card>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-display font-semibold text-ink">{t("dashboard.title")}</h3>
+          <div className="flex gap-2">
+            <button className="btn-secondary text-sm px-3 py-1.5" onClick={() => exportToCsv(currentTransactions.map((tx) => ({ Date: tx.date, Type: tx.type, Category: tx.category, Description: tx.description, Amount: tx.amount, Currency: tx.currency })), "laokip-ledger.csv")}>{t("dashboard.exportCsv")}</button>
+            <button className="btn-secondary text-sm px-3 py-1.5" onClick={() => exportToExcel(currentTransactions.map((tx) => ({ Date: tx.date, Type: tx.type, Category: tx.category, Description: tx.description, Amount: tx.amount, Currency: tx.currency })), "laokip-ledger.xlsx", "Ledger")}>{t("dashboard.exportExcel")}</button>
+          </div>
+        </div>
+        <div className="stitch-divider mb-2" />
+        <TransactionList transactions={currentTransactions} onDelete={deleteTransaction} />
+      </Card>
+    </div>
+  );
+}
+
+/* ============================= Calculators ============================= */
+function FixedDepositCalculator() {
+  const { t } = useLanguage();
+  const { format, currency } = useCurrency();
+  const [principal, setPrincipal] = useState(10000000);
+  const [rate, setRate] = useState(4.5);
+  const [termMonths, setTermMonths] = useState(12);
+  const result = useMemo(() => calculateFixedDeposit({ principal, annualRatePct: rate, termMonths }), [principal, rate, termMonths]);
+  return (
+    <Card title={t("calculators.fixedDeposit.title")} subtitle={t("calculators.fixedDeposit.subtitle")}>
+      <div className="grid md:grid-cols-3 gap-4 mb-5">
+        <Field label={t("calculators.fixedDeposit.principal")} value={principal} onChange={setPrincipal} />
+        <Field label={t("calculators.fixedDeposit.rate")} value={rate} onChange={setRate} step="0.01" />
+        <Field label={t("calculators.fixedDeposit.termMonths")} value={termMonths} onChange={setTermMonths} />
+      </div>
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <ResultTile label={t("calculators.fixedDeposit.interestEarned")} value={format(result.interestEarned, currency)} tone="gold" />
+        <ResultTile label={t("calculators.fixedDeposit.maturityValue")} value={format(result.maturityValue, currency)} tone="bamboo" />
+      </div>
+      <button className="btn-secondary text-sm" onClick={() => exportToCsv([{ Principal: principal, "Rate (%)": rate, "Term (months)": termMonths, ...result }], "fixed-deposit.csv")}>{t("dashboard.exportCsv")}</button>
+    </Card>
+  );
+}
+
+function CompoundInterestCalculator() {
+  const { t } = useLanguage();
+  const { format, currency } = useCurrency();
+  const [principal, setPrincipal] = useState(5000000);
+  const [monthlyDeposit, setMonthlyDeposit] = useState(500000);
+  const [rate, setRate] = useState(7);
+  const [years, setYears] = useState(10);
+  const [compoundingPerYear, setCompoundingPerYear] = useState(12);
+  const result = useMemo(() => calculateCompoundInterest({ principal, monthlyDeposit, annualRatePct: rate, years, compoundingPerYear }), [principal, monthlyDeposit, rate, years, compoundingPerYear]);
+  const FREQS = [{ value: 12, key: "monthly" }, { value: 4, key: "quarterly" }, { value: 1, key: "annually" }];
+  return (
+    <Card title={t("calculators.compoundInterest.title")} subtitle={t("calculators.compoundInterest.subtitle")}>
+      <div className="grid md:grid-cols-3 gap-4 mb-5">
+        <Field label={t("calculators.compoundInterest.principal")} value={principal} onChange={setPrincipal} />
+        <Field label={t("calculators.compoundInterest.monthlyDeposit")} value={monthlyDeposit} onChange={setMonthlyDeposit} />
+        <Field label={t("calculators.compoundInterest.rate")} value={rate} onChange={setRate} step="0.01" />
+        <Field label={t("calculators.compoundInterest.years")} value={years} onChange={setYears} />
+        <div><label className="label">{t("calculators.compoundInterest.compounding")}</label>
+          <select className="input" value={compoundingPerYear} onChange={(e) => setCompoundingPerYear(Number(e.target.value))}>
+            {FREQS.map((f) => <option key={f.value} value={f.value}>{t(`calculators.compoundInterest.${f.key}`)}</option>)}
+          </select></div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <ResultTile label={t("calculators.compoundInterest.futureValue")} value={format(result.futureValue, currency)} tone="gold" />
+        <ResultTile label={t("calculators.compoundInterest.totalContributed")} value={format(result.totalContributed, currency)} tone="indigo" />
+        <ResultTile label={t("calculators.compoundInterest.totalInterest")} value={format(result.totalInterest, currency)} tone="bamboo" />
+      </div>
+      <button className="btn-secondary text-sm" onClick={() => exportToCsv([{ Principal: principal, "Monthly Deposit": monthlyDeposit, "Rate (%)": rate, Years: years, ...result }], "compound-interest.csv")}>{t("dashboard.exportCsv")}</button>
+    </Card>
+  );
+}
+
+function NetProfitMarginCalculator() {
+  const { t } = useLanguage();
+  const [grossRevenue, setGrossRevenue] = useState(50000000);
+  const [netProfit, setNetProfit] = useState(7500000);
+  const result = useMemo(() => calculateNetProfitMargin({ grossRevenue, netProfit }), [grossRevenue, netProfit]);
+  return (
+    <Card title={t("calculators.profitMargin.title")} subtitle={t("calculators.profitMargin.subtitle")}>
+      <div className="grid md:grid-cols-2 gap-4 mb-5">
+        <div><label className="label">{t("calculators.profitMargin.grossRevenue")}</label><input type="number" className="input" value={grossRevenue} onChange={(e) => setGrossRevenue(Number(e.target.value))} /></div>
+        <div><label className="label">{t("calculators.profitMargin.netProfit")}</label><input type="number" className="input" value={netProfit} onChange={(e) => setNetProfit(Number(e.target.value))} /></div>
+      </div>
+      <ResultTile label={t("calculators.profitMargin.result")} value={`${result.marginPct}%`} tone={result.marginPct >= 0 ? "bamboo" : "lotus"} />
+    </Card>
+  );
+}
+
+function NPVCalculator() {
+  const { t } = useLanguage();
+  const { format, currency } = useCurrency();
+  const [initialInvestment, setInitialInvestment] = useState(20000000);
+  const [discountRate, setDiscountRate] = useState(10);
+  const [cashFlows, setCashFlows] = useState([6000000, 7000000, 8000000, 8000000]);
+  const result = useMemo(() => calculateNPV({ initialInvestment, discountRatePct: discountRate, cashFlows }), [initialInvestment, discountRate, cashFlows]);
+  const updateCF = (idx, v) => setCashFlows((f) => f.map((x, i) => (i === idx ? Number(v) : x)));
+  return (
+    <Card title={t("calculators.npv.title")} subtitle={t("calculators.npv.subtitle")}>
+      <div className="grid md:grid-cols-2 gap-4 mb-5">
+        <div><label className="label">{t("calculators.npv.initialInvestment")}</label><input type="number" className="input" value={initialInvestment} onChange={(e) => setInitialInvestment(Number(e.target.value))} /></div>
+        <div><label className="label">{t("calculators.npv.discountRate")}</label><input type="number" step="0.01" className="input" value={discountRate} onChange={(e) => setDiscountRate(Number(e.target.value))} /></div>
+      </div>
+      <div className="space-y-2 mb-4">
+        {cashFlows.map((cf, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            <label className="label flex-1 mb-0">{t("calculators.npv.cashFlow", { year: idx + 1 })}</label>
+            <input type="number" className="input w-40" value={cf} onChange={(e) => updateCF(idx, e.target.value)} />
+            <button onClick={() => setCashFlows((f) => f.filter((_, i) => i !== idx))} className="text-ink/30 hover:text-lotus text-sm px-2">✕</button>
+          </div>
+        ))}
+        <button onClick={() => setCashFlows((f) => [...f, 0])} className="btn-secondary text-sm">+ {t("calculators.npv.addYear")}</button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+        <ResultTile label={t("calculators.npv.result")} value={format(result.npv, currency)} tone={result.isPositive ? "bamboo" : "lotus"} />
+      </div>
+      <p className={`text-sm mb-4 ${result.isPositive ? "text-bamboo" : "text-lotus"}`}>{result.isPositive ? t("calculators.npv.verdictPositive") : t("calculators.npv.verdictNegative")}</p>
+      <button className="btn-secondary text-sm" onClick={() => exportToCsv(result.discountedFlows, "npv-cash-flows.csv")}>{t("dashboard.exportCsv")}</button>
+    </Card>
+  );
+}
+
+function OpportunityCostCalculator() {
+  const { t } = useLanguage();
+  const { format, currency } = useCurrency();
+  const [chosen, setChosen] = useState({ name: "Fixed Deposit", investment: 10000000, expectedReturnPct: 5, years: 5 });
+  const [foregone, setForegone] = useState({ name: "Stock Index Fund", investment: 10000000, expectedReturnPct: 9, years: 5 });
+  const result = useMemo(() => calculateOpportunityCost({ chosen, foregone }), [chosen, foregone]);
+
+  function OptionForm({ label, option, onChange }) {
+    const update = (field) => (e) => onChange({ ...option, [field]: field === "name" ? e.target.value : Number(e.target.value) });
+    return (
+      <div className="space-y-3">
+        <h3 className="font-display font-semibold text-ink">{label}</h3>
+        <div><label className="label">{t("calculators.opportunityCost.optionName")}</label><input type="text" className="input" value={option.name} onChange={update("name")} /></div>
+        <div><label className="label">{t("calculators.opportunityCost.investment")}</label><input type="number" className="input" value={option.investment} onChange={update("investment")} /></div>
+        <div><label className="label">{t("calculators.opportunityCost.expectedReturn")}</label><input type="number" step="0.01" className="input" value={option.expectedReturnPct} onChange={update("expectedReturnPct")} /></div>
+        <div><label className="label">{t("calculators.opportunityCost.years")}</label><input type="number" className="input" value={option.years} onChange={update("years")} /></div>
+      </div>
+    );
+  }
+
+  return (
+    <Card title={t("calculators.opportunityCost.title")} subtitle={t("calculators.opportunityCost.subtitle")}>
+      <div className="grid md:grid-cols-2 gap-6 mb-5">
+        <OptionForm label={t("calculators.opportunityCost.chosenLabel")} option={chosen} onChange={setChosen} />
+        <OptionForm label={t("calculators.opportunityCost.foregoneLabel")} option={foregone} onChange={setForegone} />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <ResultTile label={`${chosen.name} — ${t("calculators.opportunityCost.absoluteReturn")}`} value={format(result.chosen.absoluteReturn, currency)} tone="indigo" />
+        <ResultTile label={`${foregone.name} — ${t("calculators.opportunityCost.absoluteReturn")}`} value={format(result.foregone.absoluteReturn, currency)} tone="gold" />
+        <ResultTile label={t("calculators.opportunityCost.netAdvantage")} value={format(result.netAdvantage, currency)} tone={result.chosenIsBetter ? "bamboo" : "lotus"} />
+      </div>
+      <p className={`text-sm ${result.chosenIsBetter ? "text-bamboo" : "text-lotus"}`}>
+        {result.chosenIsBetter ? t("calculators.opportunityCost.verdictChosenBetter", { amount: format(Math.abs(result.netAdvantage), currency) }) : t("calculators.opportunityCost.verdictForegoneBetter", { amount: format(Math.abs(result.netAdvantage), currency) })}
+      </p>
+    </Card>
+  );
+}
+
+/* ============================= Settings ============================= */
+function AccountSettings() {
+  const { user } = useAuth();
+  const { t, language, setLanguage, supportedLanguages } = useLanguage();
+  const { currency, setCurrency, currencies } = useCurrency();
+  const [saved, setSaved] = useState(false);
+  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+  return (
+    <Card title={t("settings.title")}>
+      <div className="space-y-6 max-w-md">
+        <div>
+          <h3 className="font-display font-semibold text-ink mb-3">{t("settings.profile")}</h3>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center font-display font-bold text-indigo-700">{(user?.name || "U")[0]}</div>
+            <div><p className="font-medium text-ink">{user?.name}</p><p className="text-sm text-ink/50">{user?.email}</p></div>
+          </div>
+        </div>
+        <div className="stitch-divider" />
+        <div><label className="label">{t("settings.primaryCurrency")}</label>
+          <select className="input" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+            {Object.values(currencies).map((c) => <option key={c.code} value={c.code}>{c.symbol} {c.code}</option>)}
+          </select></div>
+        <div><label className="label">{t("settings.language")}</label>
+          <select className="input" value={language} onChange={(e) => setLanguage(e.target.value)}>
+            {supportedLanguages.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+          </select></div>
+        <button className="btn-primary" onClick={handleSave}>{t("settings.save")}</button>
+        {saved && <p className="text-bamboo text-sm">{t("settings.saved")}</p>}
+      </div>
+    </Card>
+  );
+}
+
+/* ============================= App ============================= */
+const PAGES = { dashboard: Dashboard, fixedDeposit: FixedDepositCalculator, compoundInterest: CompoundInterestCalculator, profitMargin: NetProfitMarginCalculator, npv: NPVCalculator, opportunityCost: OpportunityCostCalculator, settings: AccountSettings };
+
+function App() {
+  const { user, loading } = useAuth();
+  const { t } = useLanguage();
+  const [page, setPage] = useState("dashboard");
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-paper"><p className="text-ink/50">{t("common.loading")}</p></div>;
+  if (!user) return <GoogleSignIn />;
+  const Page = PAGES[page] || Dashboard;
+  return (
+    <div className="min-h-screen bg-paper">
+      <Navbar active={page} onNavigate={setPage} />
+      <main className="max-w-5xl mx-auto px-4 py-6"><Page /></main>
+    </div>
+  );
+}
+
+function Root() {
+  return (
+    <LanguageProvider>
+      <CurrencyProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </CurrencyProvider>
+    </LanguageProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<Root />);
+</script>
+</body>
+</html>
