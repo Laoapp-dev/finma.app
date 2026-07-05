@@ -7,12 +7,12 @@ import { getFirestore } from "firebase/firestore";
 // or as GitHub Actions / hosting-provider secrets for deployed builds —
 // never commit real keys to source control.
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyAvS0v-vEljDOnCIE1ODSUWaIuUyeyLUk0",
+  authDomain: "device-streaming-ab9e2bb3.firebaseapp.com",
+  projectId: "device-streaming-ab9e2bb3",
+  storageBucket: "device-streaming-ab9e2bb3.firebasestorage.app",
+  messagingSenderId: "255765040075",
+  appId: "1:255765040075:web:ad54aa4d1a99928a36444e"
 };
 
 // If a secret was never set (e.g. a GitHub Actions secret name was
