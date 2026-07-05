@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { monthKey, previousMonthKey } from "../utils/dateUtils";
 import { useCurrency } from "../context/CurrencyContext";
 
-const STORAGE_KEY = "laokip.ledger.v1";
+const STORAGE_KEY = "finma.ledger.v1";
 
 /**
  * Shape persisted to storage (and, in production, to Firestore under

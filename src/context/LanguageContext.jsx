@@ -3,7 +3,7 @@ import { translate, SUPPORTED_LANGUAGES } from "../i18n/i18n";
 
 const LanguageContext = createContext(null);
 
-const STORAGE_KEY = "laokip.language";
+const STORAGE_KEY = "finma.language";
 
 export function LanguageProvider({ children }) {
   const [language, setLanguageState] = useState(

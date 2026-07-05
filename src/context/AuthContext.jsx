@@ -5,16 +5,17 @@ import {
   signOut as firebaseSignOut,
 } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db, googleProvider } from "../firebase";
+import { auth, db, googleProvider, isFirebaseConfigured } from "../firebase";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isFirebaseConfigured);
 
   useEffect(() => {
+    if (!isFirebaseConfigured) return; // App.jsx shows a config-error screen instead
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {

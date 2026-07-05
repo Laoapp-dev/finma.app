@@ -20,7 +20,7 @@ export default function Navbar({ active, onNavigate }) {
       <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-display font-bold">
-            ₭
+            F
           </div>
           <span className="font-display font-bold text-lg text-ink">{t("app.name")}</span>
         </div>

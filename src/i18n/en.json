@@ -1,5 +1,9 @@
 {
-  "app": { "name": "LaoKip", "tagline": "Your money, clearly tracked" },
+  "app": {
+    "name": "Finma",
+    "fullName": "Finma — Financial Personal Management",
+    "tagline": "Your money, clearly tracked"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "fixedDeposit": "Fixed Deposit",
@@ -11,7 +15,7 @@
     "signOut": "Sign out"
   },
   "auth": {
-    "signInTitle": "Sign in to LaoKip",
+    "signInTitle": "Sign in to Finma",
     "signInSubtitle": "Track your income, expenses, and investments in one place.",
     "signInWithGoogle": "Continue with Google",
     "signingIn": "Signing in…"

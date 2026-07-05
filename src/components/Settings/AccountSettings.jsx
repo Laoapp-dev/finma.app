@@ -19,6 +19,8 @@ export default function AccountSettings() {
   return (
     <Card title={t("settings.title")}>
       <div className="space-y-6 max-w-md">
+        <p className="text-ink/50 text-sm -mt-2">{t("app.fullName")}</p>
+
         <div>
           <h3 className="font-display font-semibold text-ink mb-3">{t("settings.profile")}</h3>
           <div className="flex items-center gap-3 mb-4">

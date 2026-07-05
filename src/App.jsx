@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "./context/AuthContext";
 import { useLanguage } from "./context/LanguageContext";
+import { isFirebaseConfigured } from "./firebase";
+import ConfigError from "./components/common/ConfigError";
 import GoogleSignIn from "./components/Auth/GoogleSignIn";
 import Navbar from "./components/common/Navbar";
 import Dashboard from "./components/Ledger/Dashboard";
@@ -25,6 +27,10 @@ export default function App() {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
   const [page, setPage] = useState("dashboard");
+
+  if (!isFirebaseConfigured) {
+    return <ConfigError />;
+  }
 
   if (loading) {
     return (

@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo, useState, useCallback } from "react
 import { CURRENCIES, convertCurrency, formatCurrency } from "../utils/currency";
 
 const CurrencyContext = createContext(null);
-const STORAGE_KEY = "laokip.currency";
+const STORAGE_KEY = "finma.currency";
 
 export function CurrencyProvider({ children }) {
   const [currency, setCurrencyState] = useState(

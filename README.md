@@ -1,7 +1,8 @@
-# LaoKip — Personal Finance Management App
+# Finma — Financial Personal Management
 
 React (Vite) + Tailwind CSS frontend with a Firebase backend (Auth + Firestore),
-supporting Lao / English localization and LAK / THB / USD currencies.
+supporting Lao / English localization, LAK / THB / USD currencies, and installable
+as a PWA on Android, iOS, and desktop.
 
 ## 1. Setup
 
@@ -39,7 +40,7 @@ src/
     common/      Navbar, Card/ResultTile
 ```
 
-### Design tokens ("LaoKip Ledger")
+### Design tokens ("Finma Ledger")
 - Colors: Ink `#16233D`, Indigo `#2F4C7A`, Gold `#C9A227`, Paper `#F7F4EC`,
   Bamboo `#4E7D5D` (income), Lotus `#B85C55` (expense).
 - Type: Sora (display/headings) + Inter (body) + Noto Sans Lao (Lao script
@@ -93,7 +94,39 @@ refreshed every few hours) via `setRates()` for production use.
 of objects to CSV or `.xlsx` — used by the Ledger and by each calculator's
 "Export CSV" button.
 
-## Next steps for production
+## 7. PWA & Android support
+
+Finma ships as an installable Progressive Web App:
+- `public/manifest.webmanifest` — app name, icons, theme color, standalone display mode
+- `public/icons/` — 192px/512px icons plus a maskable variant for Android's adaptive icon shape
+- `public/sw.js` — a runtime-caching service worker (network-first for navigation, stale-while-revalidate for assets), registered in `src/main.jsx`
+
+On Android Chrome, visiting the deployed site shows an "Install app" / "Add to Home screen" prompt automatically once the manifest + service worker are served over HTTPS (GitHub Pages and Firebase Hosting both qualify). On iOS Safari, use Share → "Add to Home Screen" (Apple doesn't support the install prompt, but the `apple-touch-icon` and `apple-mobile-web-app-*` meta tags in `index.html` make it behave like a native app icon once added).
+
+## 8. Troubleshooting: white screen after deploying
+
+This is almost always one of two causes:
+
+1. **Absolute asset paths under a subfolder.** GitHub Pages serves project
+   sites from `https://<user>.github.io/<repo>/`, but Vite's default build
+   emits absolute paths like `/assets/index.js`, which 404 outside the
+   domain root. Fixed here via `base: "./"` in `vite.config.js` (relative
+   paths work regardless of subfolder — no repo-name configuration needed).
+2. **A missing/misspelled Firebase secret.** If a `VITE_FIREBASE_*` value
+   isn't set at build time, `initializeApp()` throws before React can
+   render anything. Fixed here two ways:
+   - `src/firebase.js` checks all required keys are present and exports
+     `isFirebaseConfigured` instead of throwing.
+   - `App.jsx` shows a `ConfigError` screen listing exactly which keys are
+     missing, instead of a blank page.
+   - `src/components/common/ErrorBoundary.jsx` catches any other runtime
+     error and displays it on-screen (with the stack trace in the console)
+     rather than failing silently.
+
+If you still see a blank screen, open the browser DevTools console (F12) —
+the error boundary logs the full stack trace there.
+
+
 - Wire `useLedger` to Firestore (`ledgerEntries` subcollection) instead of
   `localStorage` for cross-device sync; keep the same rollover logic.
 - Add a scheduled Cloud Function to run the roll-over server-side at

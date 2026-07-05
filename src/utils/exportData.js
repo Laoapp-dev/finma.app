@@ -34,9 +34,9 @@ export function exportLedger(transactions, format = "csv") {
   }));
 
   if (format === "excel") {
-    exportToExcel(rows, "laokip-ledger.xlsx", "Ledger");
+    exportToExcel(rows, "finma-ledger.xlsx", "Ledger");
   } else {
-    exportToCsv(rows, "laokip-ledger.csv");
+    exportToCsv(rows, "finma-ledger.csv");
   }
 }
 
