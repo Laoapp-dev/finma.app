@@ -2,15 +2,18 @@ import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 
 // `free: true` marks the tools usable without an account (the trial
-// features). Everything else requires signing in with Google — reflected
-// here with a small lock badge so it's clear before you even click in.
+// features — Fixed Deposit and Compound Interest). Everything else
+// requires signing in with Google, shown with a lock badge. `section`
+// inserts a small group label above that item.
 const NAV_ITEMS = [
-  { key: "dashboard", icon: "📒", free: false },
-  { key: "fixedDeposit", icon: "🏦", free: true },
+  { key: "dashboard", icon: "📊", free: false },
+  { key: "financial", icon: "📒", free: false },
+  { key: "fixedDeposit", icon: "🏦", free: true, section: "sidebarSections.calculators" },
   { key: "compoundInterest", icon: "📈", free: true },
-  { key: "profitMargin", icon: "📊", free: false },
+  { key: "profitMargin", icon: "📉", free: false },
   { key: "npv", icon: "🧮", free: false },
   { key: "opportunityCost", icon: "⚖️", free: false },
+  { key: "knowledge", icon: "📘", free: true, section: "sidebarSections.more" },
 ];
 
 export default function Sidebar({ active, onNavigate, open, onClose }) {
@@ -35,28 +38,34 @@ export default function Sidebar({ active, onNavigate, open, onClose }) {
 
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
         {NAV_ITEMS.map((item) => (
-          <button
-            key={item.key}
-            onClick={() => onNavigate(item.key)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              active === item.key
-                ? "bg-indigo-50 text-indigo-700"
-                : "text-ink/60 hover:bg-indigo-50/60 hover:text-ink"
-            }`}
-          >
-            <span aria-hidden="true">{item.icon}</span>
-            <span className="truncate flex-1 text-left">{t(`nav.${item.key}`)}</span>
-            {!user &&
-              (item.free ? (
-                <span className="text-[10px] uppercase tracking-wide bg-bamboo-50 text-bamboo px-1.5 py-0.5 rounded-full shrink-0">
-                  {t("common.freeBadge")}
-                </span>
-              ) : (
-                <span aria-hidden="true" className="text-ink/25 text-xs shrink-0">
-                  🔒
-                </span>
-              ))}
-          </button>
+          <div key={item.key}>
+            {item.section && (
+              <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-wider text-ink/35 font-semibold">
+                {t(item.section)}
+              </p>
+            )}
+            <button
+              onClick={() => onNavigate(item.key)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                active === item.key
+                  ? "bg-indigo-50 text-indigo-700"
+                  : "text-ink/60 hover:bg-indigo-50/60 hover:text-ink"
+              }`}
+            >
+              <span aria-hidden="true">{item.icon}</span>
+              <span className="truncate flex-1 text-left">{t(`nav.${item.key}`)}</span>
+              {!user &&
+                (item.free ? (
+                  <span className="text-[10px] uppercase tracking-wide bg-bamboo-50 text-bamboo px-1.5 py-0.5 rounded-full shrink-0">
+                    {t("common.freeBadge")}
+                  </span>
+                ) : (
+                  <span aria-hidden="true" className="text-ink/25 text-xs shrink-0">
+                    🔒
+                  </span>
+                ))}
+            </button>
+          </div>
         ))}
 
         <div className="stitch-divider my-2" />

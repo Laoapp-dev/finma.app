@@ -21,6 +21,7 @@ export default defineConfig({
           "vendor-react": ["react", "react-dom"],
           "vendor-firebase": ["firebase/app", "firebase/auth", "firebase/firestore"],
           "vendor-xlsx": ["xlsx"],
+          "vendor-charts": ["recharts"],
         },
       },
     },

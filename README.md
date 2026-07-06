@@ -43,9 +43,11 @@ src/
     exportData.js       CSV / Excel export (xlsx, lazy-loaded)
     dateUtils.js        Month-key helpers for the roll-over engine
   components/
-    Ledger/      Dashboard, TransactionForm, TransactionList
+    Ledger/      Dashboard (reports/charts/export), Financial (income/expense
+                 entry — TransactionForm, TransactionList)
     Calculators/ FixedDeposit, CompoundInterest (free), NetProfitMargin, NPV,
                  OpportunityCost (all three require sign-in)
+    Knowledge/   Knowledge — free explainer for every calculator's formula
     Settings/    AccountSettings
     Admin/       AdminPanel (maintenance mode toggle, user count)
     common/      Sidebar, Topbar, AuthGate, ConfigError, ErrorBoundary,
@@ -61,17 +63,21 @@ src/
   woven borders of Lao silk textiles — used instead of plain `<hr>`s.
 
 ### Layout
-- **Sidebar** (`components/common/Sidebar.jsx`) — persistent on desktop,
-  a slide-over drawer on mobile. Lists every page plus a profile card
-  (avatar, name, sign out) at the bottom.
+- **Sidebar** (`components/common/Sidebar.jsx`) — persistent on desktop, a
+  slide-over drawer on mobile. Grouped as: Dashboard, Financial, a
+  **Calculators** section (Fixed Deposit, Compound Interest, Net Profit
+  Margin, NPV, Opportunity Cost), then Knowledge, then Settings/Admin — plus
+  a profile card (avatar, name, sign out) at the bottom.
 - **Topbar** (`components/common/Topbar.jsx`) — mobile menu toggle, current
   page title, a language switcher (works signed out too), and the
   **Sign in with Google** button / account menu, top right.
-- **AuthGate** (`components/common/AuthGate.jsx`) — wraps any section that
-  needs an account. Renders its children dimmed and non-interactive with a
-  "Sign in to save your data" overlay when signed out, and passes through
-  normally once signed in. Used around the ledger's entry form/list and the
-  Settings profile/save button — currency and language stay usable either way.
+- **AuthGate** (`components/common/AuthGate.jsx`) — wraps a page's gated
+  content in dimmed, non-interactive styling plus a sign-in overlay when
+  signed out. **Important:** use exactly one `<AuthGate>` per page, wrapping
+  everything that needs to be locked together — two separate `<AuthGate>`
+  instances on the same page each render their own overlay, producing two
+  stacked popups (this was a real bug on the Settings page, fixed by merging
+  its two gates into one).
 
 ## 3. Firestore data model & how the ledger saves data
 
@@ -237,6 +243,11 @@ the admin. Redeploy rules after editing them:
 firebase deploy --only firestore:rules
 ```
 
+**Note:** the signed-out state of the ledger shows a genuinely empty list
+(no seeded/fake transactions) — `useLedger.js`'s signed-out branch sets
+`transactions: []`. `AuthGate` is what communicates "you'd see your data
+here once signed in," not placeholder content.
+
 ## 11. Free trial vs. full access
 
 | Page | Access |
@@ -246,18 +257,22 @@ firebase deploy --only firestore:rules
 | Net Profit Margin | Requires sign-in |
 | NPV | Requires sign-in |
 | Opportunity Cost | Requires sign-in |
-| Dashboard (ledger) | Requires sign-in (needed to save to Firestore anyway) |
-| Settings → profile/save | Requires sign-in |
-| Settings → currency/language | Free — no sign-in |
+| Knowledge (guidance) | Free — no sign-in |
+| Dashboard (reports/charts) | Requires sign-in (needed to read Firestore data anyway) |
+| Financial (income/expense entry) | Requires sign-in |
+| Settings (profile, currency, language) | Requires sign-in — use the Topbar's language switcher instead if you just want to preview the UI in another language without signing in |
 
-This is controlled per-page by wrapping a calculator's `<Card>` in
-`<AuthGate variant="feature">` (see `AuthGate.jsx` — `variant="feature"` shows
-"sign up to unlock this tool" wording; the default `variant="data"` used on
-the Dashboard shows "sign in to save your data" instead). To make another
-calculator free, remove its `<AuthGate>` wrapper; to gate a new page, wrap it.
-The Sidebar's `NAV_ITEMS` array also has a `free: true/false` flag purely for
-the "Free" / 🔒 badges shown next to each item.
+This is controlled per-page by wrapping the page's content in a **single**
+`<AuthGate>` (never more than one per page — see the note in section 2).
+`variant="feature"` (used on the three locked calculators) shows "sign up to
+unlock this tool" wording; the default `variant="data"` (used on Financial,
+Dashboard, Settings) shows "sign in to save your data" instead. To make
+another calculator free, remove its `<AuthGate>` wrapper; to gate a new
+page, wrap all of its gated content in one. The Sidebar's `NAV_ITEMS` array
+also has a `free: true/false` flag purely for the "Free" / 🔒 badges shown
+next to each item.
 
+## Next steps for production
 
 - Add a scheduled Cloud Function to run the roll-over server-side at
   midnight on the 1st, so it doesn't depend on the app being opened that day.

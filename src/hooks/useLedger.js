@@ -29,11 +29,6 @@ import { monthKey } from "../utils/dateUtils";
  * client-side. That's plenty fast for a personal ledger's data volume.
  */
 
-const DEMO_TRANSACTIONS = [
-  { id: "demo1", date: new Date().toISOString().slice(0, 10), type: "income", category: "salary", description: "Monthly salary", amount: 4500000, currency: "LAK" },
-  { id: "demo2", date: new Date().toISOString().slice(0, 10), type: "expense", category: "food", description: "Groceries", amount: 350000, currency: "LAK" },
-];
-
 function round2(n) {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
@@ -69,13 +64,13 @@ export function useLedger() {
   );
 
   // ---------------------------------------------------------------------
-  // Signed OUT: read-only demo data so the page still shows what it does.
-  // AuthGate additionally dims/disables interaction, this is just content.
+  // Signed OUT: an empty, read-only ledger. AuthGate shows the "sign in
+  // to save your data" prompt on top of it — there's no fake/demo content.
   // ---------------------------------------------------------------------
   useEffect(() => {
     if (user) return;
-    setTransactions(DEMO_TRANSACTIONS.map((tx) => ({ ...tx, cycleKey: currentKey })));
-    setCurrentCycle({ openingBalance: 800000, closed: false });
+    setTransactions([]);
+    setCurrentCycle({ openingBalance: 0, closed: false });
     setLoadingLedger(false);
   }, [user, currentKey]);
 

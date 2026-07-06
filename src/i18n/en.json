@@ -6,15 +6,21 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "financial": "Financial",
     "fixedDeposit": "Fixed Deposit",
     "compoundInterest": "Compound Interest",
     "profitMargin": "Profit Margin",
     "npv": "NPV",
     "opportunityCost": "Opportunity Cost",
+    "knowledge": "Knowledge",
     "settings": "Settings",
     "signOut": "Sign out",
     "signIn": "Sign in",
     "admin": "Admin"
+  },
+  "sidebarSections": {
+    "calculators": "Calculators",
+    "more": "More"
   },
   "auth": {
     "signInTitle": "Sign in to Finma",
@@ -44,6 +50,10 @@
     "exportCsv": "Export CSV",
     "exportExcel": "Export Excel",
     "rolloverNotice": "New month detected — {{amount}} carried over from {{month}}.",
+    "charts": {
+      "byCategory": "Income vs. expenses by category",
+      "balanceTrend": "Balance trend this month"
+    },
     "categories": {
       "salary": "Salary",
       "business": "Business",
@@ -115,6 +125,38 @@
       "netAdvantage": "Net advantage of chosen option",
       "verdictChosenBetter": "Your chosen option outperforms the alternative by {{amount}}.",
       "verdictForegoneBetter": "The foregone option would have outperformed by {{amount}}."
+    }
+  },
+  "financial": {
+    "subtitle": "Record your income and expenses for this month."
+  },
+  "knowledge": {
+    "subtitle": "A short guide to what each calculator does and when to use it.",
+    "whenToUse": "When to use it",
+    "fixedDeposit": {
+      "explanation": "A fixed deposit locks a lump sum with a bank for a set term in exchange for a guaranteed interest rate. Interest accrues only on the original principal (simple interest), not on interest already earned.",
+      "formula": "I = P × (r ÷ 100) × (t ÷ 12)",
+      "whenToUse": "Comparing short-to-medium term savings that pay simple interest, such as most bank term deposits."
+    },
+    "compoundInterest": {
+      "explanation": "Compound interest grows your money on both the principal and the interest already earned, and can include regular monthly contributions on top of an initial investment.",
+      "formula": "FV = P(1+r/n)^(nt) + PMT × [((1+r/n)^(nt) − 1) ÷ (r/n)]",
+      "whenToUse": "Long-term investments like stock index funds, retirement accounts, or any plan with regular contributions."
+    },
+    "profitMargin": {
+      "explanation": "Net profit margin shows how much of every unit of revenue a business keeps as profit after all expenses, taxes, and costs are paid.",
+      "formula": "Net Profit Margin (%) = (Net Profit ÷ Gross Revenue) × 100",
+      "whenToUse": "Comparing a business's profitability over time, or against competitors, regardless of size."
+    },
+    "npv": {
+      "explanation": "Net Present Value discounts a series of future cash flows back to today's value using a chosen discount rate, then subtracts the initial investment.",
+      "formula": "NPV = Σ [CFₜ ÷ (1+r)ᵗ] − Initial Investment",
+      "whenToUse": "Deciding whether a project or investment is worth pursuing — a positive NPV means it's expected to add value."
+    },
+    "opportunityCost": {
+      "explanation": "Opportunity cost compares the return of the option you chose against the return you gave up by not choosing the alternative.",
+      "formula": "Opportunity Cost = FV(foregone option) − FV(chosen option)",
+      "whenToUse": "Choosing between two investments or uses of the same money, to see exactly what you'd be giving up."
     }
   },
   "settings": {

@@ -19,10 +19,14 @@ export default function AccountSettings() {
 
   return (
     <Card title={t("settings.title")}>
-      <div className="space-y-6 max-w-md">
-        <p className="text-ink/50 text-sm -mt-2">{t("app.fullName")}</p>
+      {/* A single AuthGate wraps the whole page — Settings is a "locked"
+          function like the other non-trial ones. (Guests who just want to
+          preview the UI in their language can still use the quick language
+          switcher in the Topbar without needing this page.) */}
+      <AuthGate>
+        <div className="space-y-6 max-w-md">
+          <p className="text-ink/50 text-sm -mt-2">{t("app.fullName")}</p>
 
-        <AuthGate>
           <div>
             <h3 className="font-display font-semibold text-ink mb-3">{t("settings.profile")}</h3>
             <div className="flex items-center gap-3 mb-4">
@@ -35,42 +39,37 @@ export default function AccountSettings() {
               </div>
             </div>
           </div>
-        </AuthGate>
 
-        <div className="stitch-divider" />
+          <div className="stitch-divider" />
 
-        {/* Currency + language are local display preferences, so guests can
-            use them freely to preview the app in their own language before
-            deciding to sign in. */}
-        <div>
-          <label className="label">{t("settings.primaryCurrency")}</label>
-          <select className="input" value={currency} onChange={(e) => setCurrency(e.target.value)}>
-            {Object.values(currencies).map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.symbol} {c.code}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div>
+            <label className="label">{t("settings.primaryCurrency")}</label>
+            <select className="input" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+              {Object.values(currencies).map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.symbol} {c.code}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label className="label">{t("settings.language")}</label>
-          <select className="input" value={language} onChange={(e) => setLanguage(e.target.value)}>
-            {supportedLanguages.map((l) => (
-              <option key={l.code} value={l.code}>
-                {l.label}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div>
+            <label className="label">{t("settings.language")}</label>
+            <select className="input" value={language} onChange={(e) => setLanguage(e.target.value)}>
+              {supportedLanguages.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <AuthGate>
           <button className="btn-primary" onClick={handleSave}>
             {t("settings.save")}
           </button>
           {saved && <p className="text-bamboo text-sm mt-2">{t("settings.saved")}</p>}
-        </AuthGate>
-      </div>
+        </div>
+      </AuthGate>
     </Card>
   );
 }

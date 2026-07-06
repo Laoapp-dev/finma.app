@@ -13,21 +13,25 @@ import Topbar from "./components/common/Topbar";
 // Combined with dynamic-importing xlsx (see utils/exportData.js), this is
 // the main fix for the app feeling slow to appear on first load.
 const Dashboard = lazy(() => import("./components/Ledger/Dashboard"));
+const Financial = lazy(() => import("./components/Ledger/Financial"));
 const FixedDepositCalculator = lazy(() => import("./components/Calculators/FixedDepositCalculator"));
 const CompoundInterestCalculator = lazy(() => import("./components/Calculators/CompoundInterestCalculator"));
 const NetProfitMarginCalculator = lazy(() => import("./components/Calculators/NetProfitMarginCalculator"));
 const NPVCalculator = lazy(() => import("./components/Calculators/NPVCalculator"));
 const OpportunityCostCalculator = lazy(() => import("./components/Calculators/OpportunityCostCalculator"));
+const Knowledge = lazy(() => import("./components/Knowledge/Knowledge"));
 const AccountSettings = lazy(() => import("./components/Settings/AccountSettings"));
 const AdminPanel = lazy(() => import("./components/Admin/AdminPanel"));
 
 const PAGES = {
   dashboard: Dashboard,
+  financial: Financial,
   fixedDeposit: FixedDepositCalculator,
   compoundInterest: CompoundInterestCalculator,
   profitMargin: NetProfitMarginCalculator,
   npv: NPVCalculator,
   opportunityCost: OpportunityCostCalculator,
+  knowledge: Knowledge,
   settings: AccountSettings,
   admin: AdminPanel,
 };
