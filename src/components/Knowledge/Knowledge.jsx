@@ -1,7 +1,16 @@
 import { useLanguage } from "../../context/LanguageContext";
 import { Card } from "../common/Card";
 
-const TOPICS = ["fixedDeposit", "compoundInterest", "profitMargin", "npv", "opportunityCost"];
+const TOPICS = [
+  "fixedDeposit",
+  "compoundInterest",
+  "profitMargin",
+  "npv",
+  "opportunityCost",
+  "marginalCostRevenue",
+  "loanRepayment",
+  "stockRoiDividend",
+];
 
 export default function Knowledge() {
   const { t } = useLanguage();

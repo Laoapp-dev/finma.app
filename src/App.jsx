@@ -7,6 +7,7 @@ import ConfigError from "./components/common/ConfigError";
 import MaintenanceScreen from "./components/common/MaintenanceScreen";
 import Sidebar from "./components/common/Sidebar";
 import Topbar from "./components/common/Topbar";
+import BottomNav from "./components/common/BottomNav";
 
 // Lazy-loaded: each page's JS is only downloaded when the user actually
 // navigates to it, instead of all being bundled into the initial payload.
@@ -14,11 +15,15 @@ import Topbar from "./components/common/Topbar";
 // the main fix for the app feeling slow to appear on first load.
 const Dashboard = lazy(() => import("./components/Ledger/Dashboard"));
 const Financial = lazy(() => import("./components/Ledger/Financial"));
+const Analytics = lazy(() => import("./components/Analytics/Analytics"));
 const FixedDepositCalculator = lazy(() => import("./components/Calculators/FixedDepositCalculator"));
 const CompoundInterestCalculator = lazy(() => import("./components/Calculators/CompoundInterestCalculator"));
 const NetProfitMarginCalculator = lazy(() => import("./components/Calculators/NetProfitMarginCalculator"));
 const NPVCalculator = lazy(() => import("./components/Calculators/NPVCalculator"));
 const OpportunityCostCalculator = lazy(() => import("./components/Calculators/OpportunityCostCalculator"));
+const MarginalCostRevenueCalculator = lazy(() => import("./components/Calculators/MarginalCostRevenueCalculator"));
+const LoanRepaymentCalculator = lazy(() => import("./components/Calculators/LoanRepaymentCalculator"));
+const StockROIDividendCalculator = lazy(() => import("./components/Calculators/StockROIDividendCalculator"));
 const Knowledge = lazy(() => import("./components/Knowledge/Knowledge"));
 const AccountSettings = lazy(() => import("./components/Settings/AccountSettings"));
 const AdminPanel = lazy(() => import("./components/Admin/AdminPanel"));
@@ -26,11 +31,15 @@ const AdminPanel = lazy(() => import("./components/Admin/AdminPanel"));
 const PAGES = {
   dashboard: Dashboard,
   financial: Financial,
+  analytics: Analytics,
   fixedDeposit: FixedDepositCalculator,
   compoundInterest: CompoundInterestCalculator,
   profitMargin: NetProfitMarginCalculator,
   npv: NPVCalculator,
   opportunityCost: OpportunityCostCalculator,
+  marginalCostRevenue: MarginalCostRevenueCalculator,
+  loanRepayment: LoanRepaymentCalculator,
+  stockRoiDividend: StockROIDividendCalculator,
   knowledge: Knowledge,
   settings: AccountSettings,
   admin: AdminPanel,
@@ -67,27 +76,26 @@ export default function App() {
   }
 
   const Page = PAGES[page] || FixedDepositCalculator;
+  const navigate = (p) => {
+    setPage(p);
+    setSidebarOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-paper md:flex">
-      <Sidebar
-        active={page}
-        onNavigate={(p) => {
-          setPage(p);
-          setSidebarOpen(false);
-        }}
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      <Sidebar active={page} onNavigate={navigate} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 min-w-0">
         <Topbar onMenuClick={() => setSidebarOpen(true)} pageTitle={t(`nav.${page}`)} />
-        <main className="max-w-5xl mx-auto px-4 py-6">
+        {/* Bottom padding on mobile so content isn't hidden behind the fixed BottomNav. */}
+        <main className="max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-6">
           <Suspense fallback={<PageSpinner />}>
             <Page />
           </Suspense>
         </main>
       </div>
+
+      <BottomNav active={page} onNavigate={navigate} />
     </div>
   );
 }

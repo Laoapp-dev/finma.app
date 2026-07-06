@@ -7,11 +7,15 @@
   "nav": {
     "dashboard": "Dashboard",
     "financial": "Financial",
+    "analytics": "Analytics",
     "fixedDeposit": "Fixed Deposit",
     "compoundInterest": "Compound Interest",
     "profitMargin": "Profit Margin",
     "npv": "NPV",
     "opportunityCost": "Opportunity Cost",
+    "marginalCostRevenue": "Marginal Cost & Revenue",
+    "loanRepayment": "Loan Repayment",
+    "stockRoiDividend": "Stock ROI & Dividend",
     "knowledge": "Knowledge",
     "settings": "Settings",
     "signOut": "Sign out",
@@ -52,7 +56,14 @@
     "rolloverNotice": "New month detected — {{amount}} carried over from {{month}}.",
     "charts": {
       "byCategory": "Income vs. expenses by category",
-      "balanceTrend": "Balance trend this month"
+      "balanceTrend": "Balance trend this month",
+      "pieNote": "Pie shows the expense side only — income and expense can't share one pie.",
+      "type": {
+        "bar": "Bar",
+        "line": "Line",
+        "area": "Area",
+        "pie": "Pie"
+      }
     },
     "categories": {
       "salary": "Salary",
@@ -125,6 +136,47 @@
       "netAdvantage": "Net advantage of chosen option",
       "verdictChosenBetter": "Your chosen option outperforms the alternative by {{amount}}.",
       "verdictForegoneBetter": "The foregone option would have outperformed by {{amount}}."
+    },
+    "marginalCostRevenue": {
+      "title": "Marginal Cost & Revenue",
+      "subtitle": "The cost and revenue of producing one more unit",
+      "previousQuantity": "Previous quantity",
+      "newQuantity": "New quantity",
+      "previousCost": "Previous total cost",
+      "newCost": "New total cost",
+      "previousRevenue": "Previous total revenue",
+      "newRevenue": "New total revenue",
+      "marginalCost": "Marginal cost",
+      "marginalRevenue": "Marginal revenue",
+      "marginalProfit": "Marginal profit (MR − MC)",
+      "verdict": {
+        "expand": "Marginal revenue exceeds marginal cost — producing more is expected to add profit.",
+        "reduce": "Marginal cost exceeds marginal revenue — producing more is expected to reduce profit.",
+        "optimal": "Marginal revenue and marginal cost are about equal — this is close to the profit-maximizing output."
+      }
+    },
+    "loanRepayment": {
+      "title": "Loan Repayment Calculator",
+      "subtitle": "Monthly payment for an amortizing loan",
+      "principal": "Loan amount (P)",
+      "rate": "Annual interest rate (%)",
+      "termMonths": "Term (months)",
+      "monthlyPayment": "Monthly payment",
+      "totalRepayment": "Total repayment",
+      "totalInterest": "Total interest paid"
+    },
+    "stockRoiDividend": {
+      "title": "Stock ROI & Dividend",
+      "subtitle": "Total return from price gains and dividends",
+      "purchasePrice": "Purchase price",
+      "currentPrice": "Current / sale price",
+      "dividendsReceived": "Dividends received",
+      "holdingYears": "Holding period (years)",
+      "capitalGain": "Capital gain",
+      "totalReturn": "Total return",
+      "roiPct": "ROI",
+      "dividendYieldPct": "Dividend yield",
+      "annualizedRoiPct": "Annualized ROI"
     }
   },
   "financial": {
@@ -157,7 +209,27 @@
       "explanation": "Opportunity cost compares the return of the option you chose against the return you gave up by not choosing the alternative.",
       "formula": "Opportunity Cost = FV(foregone option) − FV(chosen option)",
       "whenToUse": "Choosing between two investments or uses of the same money, to see exactly what you'd be giving up."
+    },
+    "marginalCostRevenue": {
+      "explanation": "Marginal cost and marginal revenue measure the extra cost and extra income from producing just one more unit — not the average across everything you've made so far.",
+      "formula": "MC = ΔTotal Cost ÷ ΔQuantity, MR = ΔTotal Revenue ÷ ΔQuantity",
+      "whenToUse": "Deciding whether to produce more or less — profit is maximized where marginal revenue equals marginal cost."
+    },
+    "loanRepayment": {
+      "explanation": "An amortizing loan is repaid in equal monthly installments that include both interest and principal, with the interest portion shrinking and the principal portion growing over the loan's term.",
+      "formula": "PMT = P × r × (1+r)ⁿ ÷ [(1+r)ⁿ − 1]",
+      "whenToUse": "Estimating the monthly payment and total interest for a mortgage, car loan, or any fixed-term installment loan."
+    },
+    "stockRoiDividend": {
+      "explanation": "Total return on a stock combines two sources: the change in its price (capital gain or loss) and any dividends paid out while you held it.",
+      "formula": "ROI (%) = (Capital Gain + Dividends) ÷ Purchase Price × 100",
+      "whenToUse": "Evaluating how a stock actually performed for you, not just its price change — dividends can be a large part of total return."
     }
+  },
+  "analytics": {
+    "savingsRate": "Savings rate",
+    "expenseRatio": "Expense-to-income ratio",
+    "breakdownTitle": "Expense breakdown by category"
   },
   "settings": {
     "title": "Account Settings",

@@ -146,6 +146,100 @@ function compoundFutureValue(investment, ratePct, years) {
   return P * Math.pow(1 + r, t);
 }
 
+// ---------------------------------------------------------------------------
+// 6. Marginal Cost & Marginal Revenue
+//    MC = ΔTotal Cost / ΔQuantity = (TC2 - TC1) / (Q2 - Q1)
+//    MR = ΔTotal Revenue / ΔQuantity = (TR2 - TR1) / (Q2 - Q1)
+//    Comparing MR to MC tells you whether producing one more unit adds to
+//    or subtracts from profit.
+// ---------------------------------------------------------------------------
+export function calculateMarginalCostRevenue({
+  previousQuantity,
+  newQuantity,
+  previousCost,
+  newCost,
+  previousRevenue,
+  newRevenue,
+}) {
+  const q1 = Number(previousQuantity) || 0;
+  const q2 = Number(newQuantity) || 0;
+  const deltaQ = q2 - q1;
+
+  const tc1 = Number(previousCost) || 0;
+  const tc2 = Number(newCost) || 0;
+  const tr1 = Number(previousRevenue) || 0;
+  const tr2 = Number(newRevenue) || 0;
+
+  const marginalCost = deltaQ === 0 ? 0 : (tc2 - tc1) / deltaQ;
+  const marginalRevenue = deltaQ === 0 ? 0 : (tr2 - tr1) / deltaQ;
+  const marginalProfit = marginalRevenue - marginalCost;
+
+  return {
+    marginalCost: round2(marginalCost),
+    marginalRevenue: round2(marginalRevenue),
+    marginalProfit: round2(marginalProfit),
+    // "expand" = produce more (MR > MC), "reduce" = produce less (MR < MC),
+    // "optimal" = at the profit-maximizing point (MR ≈ MC).
+    verdict: Math.abs(marginalProfit) < 0.005 ? "optimal" : marginalProfit > 0 ? "expand" : "reduce",
+  };
+}
+
+// ---------------------------------------------------------------------------
+// 7. Loan Repayment (amortizing loan)
+//    Monthly payment: PMT = P * r * (1+r)^n / ((1+r)^n - 1)
+//    where r = monthly interest rate, n = number of monthly payments.
+//    Falls back to simple division when r = 0 (interest-free loan).
+// ---------------------------------------------------------------------------
+export function calculateLoanRepayment({ principal, annualRatePct, termMonths }) {
+  const P = Number(principal) || 0;
+  const n = Number(termMonths) || 0;
+  const r = (Number(annualRatePct) || 0) / 100 / 12;
+
+  if (n === 0) {
+    return { monthlyPayment: 0, totalRepayment: 0, totalInterest: 0 };
+  }
+
+  const monthlyPayment = r === 0 ? P / n : (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  const totalRepayment = monthlyPayment * n;
+  const totalInterest = totalRepayment - P;
+
+  return {
+    monthlyPayment: round2(monthlyPayment),
+    totalRepayment: round2(totalRepayment),
+    totalInterest: round2(totalInterest),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// 8. Stock ROI & Dividend
+//    Capital Gain = Sale Price - Purchase Price
+//    Total Return = Capital Gain + Dividends Received
+//    ROI (%) = (Total Return / Purchase Price) * 100
+//    Dividend Yield (%) = (Dividends / Purchase Price) * 100
+//    Annualized ROI (%) = ((1 + ROI/100)^(1/years) - 1) * 100, if years given.
+// ---------------------------------------------------------------------------
+export function calculateStockROIDividend({ purchasePrice, currentPrice, dividendsReceived, holdingYears }) {
+  const P0 = Number(purchasePrice) || 0;
+  const P1 = Number(currentPrice) || 0;
+  const dividends = Number(dividendsReceived) || 0;
+  const years = Number(holdingYears) || 0;
+
+  const capitalGain = P1 - P0;
+  const totalReturn = capitalGain + dividends;
+  const roiPct = P0 === 0 ? 0 : (totalReturn / P0) * 100;
+  const dividendYieldPct = P0 === 0 ? 0 : (dividends / P0) * 100;
+  const annualizedRoiPct =
+    years > 0 && 1 + roiPct / 100 > 0 ? (Math.pow(1 + roiPct / 100, 1 / years) - 1) * 100 : null;
+
+  return {
+    capitalGain: round2(capitalGain),
+    totalReturn: round2(totalReturn),
+    roiPct: round2(roiPct),
+    dividendYieldPct: round2(dividendYieldPct),
+    annualizedRoiPct: annualizedRoiPct === null ? null : round2(annualizedRoiPct),
+  };
+}
+
 function round2(n) {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }

@@ -8,11 +8,15 @@ import { useLanguage } from "../../context/LanguageContext";
 const NAV_ITEMS = [
   { key: "dashboard", icon: "📊", free: false },
   { key: "financial", icon: "📒", free: false },
+  { key: "analytics", icon: "🧭", free: false },
   { key: "fixedDeposit", icon: "🏦", free: true, section: "sidebarSections.calculators" },
   { key: "compoundInterest", icon: "📈", free: true },
   { key: "profitMargin", icon: "📉", free: false },
   { key: "npv", icon: "🧮", free: false },
   { key: "opportunityCost", icon: "⚖️", free: false },
+  { key: "marginalCostRevenue", icon: "🏭", free: false },
+  { key: "loanRepayment", icon: "🏠", free: false },
+  { key: "stockRoiDividend", icon: "💹", free: false },
   { key: "knowledge", icon: "📘", free: true, section: "sidebarSections.more" },
 ];
 

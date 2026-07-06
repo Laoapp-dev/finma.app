@@ -1,10 +1,16 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   AreaChart,
   Area,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -19,6 +25,8 @@ import { Card, ResultTile } from "../common/Card";
 import AuthGate from "../common/AuthGate";
 
 const CHART_COLORS = { income: "#4E7D5D", expense: "#B85C55", balance: "#2F4C7A" };
+const PIE_PALETTE = ["#B85C55", "#C9A227", "#2F4C7A", "#4E7D5D", "#8A6FB0", "#D98E4A", "#5AA0A8", "#9B5C6B"];
+const CHART_TYPES = ["bar", "line", "area", "pie"];
 
 export default function Dashboard() {
   const { t } = useLanguage();
@@ -31,6 +39,7 @@ export default function Dashboard() {
     rolloverNotice,
     clearRolloverNotice,
   } = useLedger();
+  const [chartType, setChartType] = useState("bar");
 
   const income = currentTransactions
     .filter((tx) => tx.type === "income")
@@ -39,7 +48,8 @@ export default function Dashboard() {
     .filter((tx) => tx.type === "expense")
     .reduce((sum, tx) => sum + convert(Number(tx.amount) || 0, tx.currency, currency), 0);
 
-  // Bar chart: income vs. expense totals per category, in the primary currency.
+  // Income vs. expense totals per category, in the primary currency —
+  // feeds the switchable bar/line/area/pie "infographic" below.
   const categoryData = useMemo(() => {
     const totals = {};
     currentTransactions.forEach((tx) => {
@@ -50,8 +60,15 @@ export default function Dashboard() {
     return Object.values(totals);
   }, [currentTransactions, convert, currency, t]);
 
-  // Area chart: running balance day-by-day through the current month, so
-  // the roll-over's opening balance visibly trends up/down as entries land.
+  // Pie needs one value per slice — expense breakdown by category is the
+  // most useful single-series view (where is the money actually going).
+  const expensePieData = useMemo(
+    () => categoryData.filter((row) => row.expense > 0).map((row) => ({ name: row.category, value: round2(row.expense) })),
+    [categoryData]
+  );
+
+  // Running balance day-by-day through the current month, so the
+  // roll-over's opening balance visibly trends up/down as entries land.
   const balanceTrend = useMemo(() => {
     const sorted = [...currentTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
     let running = currentCycle.openingBalance || 0;
@@ -98,20 +115,73 @@ export default function Dashboard() {
             <ResultTile label={t("dashboard.expense")} value={format(expense)} tone="lotus" />
           </div>
 
-          <Card title={t("dashboard.charts.byCategory")}>
+          <Card>
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <h3 className="font-display font-semibold text-ink">{t("dashboard.charts.byCategory")}</h3>
+              <div className="flex gap-1 bg-indigo-50 rounded-lg p-1">
+                {CHART_TYPES.map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setChartType(type)}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                      chartType === type ? "bg-white text-indigo-700 shadow-sm" : "text-ink/50 hover:text-ink"
+                    }`}
+                  >
+                    {t(`dashboard.charts.type.${type}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {categoryData.length === 0 ? (
               <p className="text-ink/50 text-sm py-6 text-center">{t("dashboard.noTransactions")}</p>
             ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={categoryData}>
-                  <CartesianGrid strokeDasharray="4 8" stroke="#D7E0EE" />
-                  <XAxis dataKey="category" tick={{ fontSize: 12, fill: "#16233D99" }} />
-                  <YAxis tick={{ fontSize: 12, fill: "#16233D99" }} width={70} />
-                  <Tooltip formatter={(v) => format(v, currency)} />
-                  <Bar dataKey="income" name={t("dashboard.income")} fill={CHART_COLORS.income} radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="expense" name={t("dashboard.expense")} fill={CHART_COLORS.expense} radius={[4, 4, 0, 0]} />
-                </BarChart>
+              <ResponsiveContainer width="100%" height={280}>
+                {chartType === "bar" ? (
+                  <BarChart data={categoryData}>
+                    <CartesianGrid strokeDasharray="4 8" stroke="#D7E0EE" />
+                    <XAxis dataKey="category" tick={{ fontSize: 12, fill: "#16233D99" }} />
+                    <YAxis tick={{ fontSize: 12, fill: "#16233D99" }} width={70} />
+                    <Tooltip formatter={(v) => format(v, currency)} />
+                    <Legend />
+                    <Bar dataKey="income" name={t("dashboard.income")} fill={CHART_COLORS.income} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="expense" name={t("dashboard.expense")} fill={CHART_COLORS.expense} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                ) : chartType === "line" ? (
+                  <LineChart data={categoryData}>
+                    <CartesianGrid strokeDasharray="4 8" stroke="#D7E0EE" />
+                    <XAxis dataKey="category" tick={{ fontSize: 12, fill: "#16233D99" }} />
+                    <YAxis tick={{ fontSize: 12, fill: "#16233D99" }} width={70} />
+                    <Tooltip formatter={(v) => format(v, currency)} />
+                    <Legend />
+                    <Line type="monotone" dataKey="income" name={t("dashboard.income")} stroke={CHART_COLORS.income} strokeWidth={2} />
+                    <Line type="monotone" dataKey="expense" name={t("dashboard.expense")} stroke={CHART_COLORS.expense} strokeWidth={2} />
+                  </LineChart>
+                ) : chartType === "area" ? (
+                  <AreaChart data={categoryData}>
+                    <CartesianGrid strokeDasharray="4 8" stroke="#D7E0EE" />
+                    <XAxis dataKey="category" tick={{ fontSize: 12, fill: "#16233D99" }} />
+                    <YAxis tick={{ fontSize: 12, fill: "#16233D99" }} width={70} />
+                    <Tooltip formatter={(v) => format(v, currency)} />
+                    <Legend />
+                    <Area type="monotone" dataKey="income" name={t("dashboard.income")} stroke={CHART_COLORS.income} fill={CHART_COLORS.income} fillOpacity={0.25} />
+                    <Area type="monotone" dataKey="expense" name={t("dashboard.expense")} stroke={CHART_COLORS.expense} fill={CHART_COLORS.expense} fillOpacity={0.25} />
+                  </AreaChart>
+                ) : (
+                  <PieChart>
+                    <Tooltip formatter={(v) => format(v, currency)} />
+                    <Legend />
+                    <Pie data={expensePieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+                      {expensePieData.map((entry, idx) => (
+                        <Cell key={entry.name} fill={PIE_PALETTE[idx % PIE_PALETTE.length]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                )}
               </ResponsiveContainer>
+            )}
+            {chartType === "pie" && (
+              <p className="text-ink/40 text-xs text-center mt-2">{t("dashboard.charts.pieNote")}</p>
             )}
           </Card>
 
