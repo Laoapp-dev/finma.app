@@ -6,6 +6,7 @@ import {
 } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db, googleProvider, isFirebaseConfigured } from "../firebase";
+import { isAdminEmail } from "../config/admin";
 
 const AuthContext = createContext(null);
 
@@ -61,9 +62,11 @@ export function AuthProvider({ children }) {
     [user]
   );
 
+  const isAdmin = isAdminEmail(user?.email);
+
   const value = useMemo(
-    () => ({ user, profile, loading, signInWithGoogle, signOut, updateProfile }),
-    [user, profile, loading, signInWithGoogle, signOut, updateProfile]
+    () => ({ user, profile, isAdmin, loading, signInWithGoogle, signOut, updateProfile }),
+    [user, profile, isAdmin, loading, signInWithGoogle, signOut, updateProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

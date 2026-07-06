@@ -1,26 +1,29 @@
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 
+// `free: true` marks the tools usable without an account (the trial
+// features). Everything else requires signing in with Google — reflected
+// here with a small lock badge so it's clear before you even click in.
 const NAV_ITEMS = [
-  { key: "dashboard", icon: "📒" },
-  { key: "fixedDeposit", icon: "🏦" },
-  { key: "compoundInterest", icon: "📈" },
-  { key: "profitMargin", icon: "📊" },
-  { key: "npv", icon: "🧮" },
-  { key: "opportunityCost", icon: "⚖️" },
+  { key: "dashboard", icon: "📒", free: false },
+  { key: "fixedDeposit", icon: "🏦", free: true },
+  { key: "compoundInterest", icon: "📈", free: true },
+  { key: "profitMargin", icon: "📊", free: false },
+  { key: "npv", icon: "🧮", free: false },
+  { key: "opportunityCost", icon: "⚖️", free: false },
 ];
 
 export default function Sidebar({ active, onNavigate, open, onClose }) {
   const { t } = useLanguage();
-  const { user, profile, loading, signInWithGoogle, signOut } = useAuth();
+  const { user, profile, isAdmin, loading, signInWithGoogle, signOut } = useAuth();
   const displayName = profile?.name || user?.displayName || user?.email || "";
   const photoURL = profile?.photoURL || user?.photoURL || "";
 
   const content = (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-4 py-4">
-        <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-display font-bold shrink-0">
-          F
+        <div className="h-9 min-w-[3rem] px-2 rounded-lg bg-indigo-600 flex items-center justify-center text-gold font-display font-bold shrink-0">
+          Fin
         </div>
         <div className="min-w-0">
           <p className="font-display font-bold text-ink leading-tight truncate">{t("app.name")}</p>
@@ -42,7 +45,17 @@ export default function Sidebar({ active, onNavigate, open, onClose }) {
             }`}
           >
             <span aria-hidden="true">{item.icon}</span>
-            <span className="truncate">{t(`nav.${item.key}`)}</span>
+            <span className="truncate flex-1 text-left">{t(`nav.${item.key}`)}</span>
+            {!user &&
+              (item.free ? (
+                <span className="text-[10px] uppercase tracking-wide bg-bamboo-50 text-bamboo px-1.5 py-0.5 rounded-full shrink-0">
+                  {t("common.freeBadge")}
+                </span>
+              ) : (
+                <span aria-hidden="true" className="text-ink/25 text-xs shrink-0">
+                  🔒
+                </span>
+              ))}
           </button>
         ))}
 
@@ -59,6 +72,20 @@ export default function Sidebar({ active, onNavigate, open, onClose }) {
           <span aria-hidden="true">⚙️</span>
           <span>{t("nav.settings")}</span>
         </button>
+
+        {isAdmin && (
+          <button
+            onClick={() => onNavigate("admin")}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+              active === "admin"
+                ? "bg-gold-50 text-gold-700"
+                : "text-ink/60 hover:bg-gold-50/60 hover:text-ink"
+            }`}
+          >
+            <span aria-hidden="true">🛠️</span>
+            <span>{t("nav.admin")}</span>
+          </button>
+        )}
       </nav>
 
       <div className="stitch-divider" />

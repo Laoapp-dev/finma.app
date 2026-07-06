@@ -1,7 +1,10 @@
 import { useState, lazy, Suspense } from "react";
 import { useLanguage } from "./context/LanguageContext";
+import { useAuth } from "./context/AuthContext";
+import { useAppConfig } from "./hooks/useAppConfig";
 import { isFirebaseConfigured } from "./firebase";
 import ConfigError from "./components/common/ConfigError";
+import MaintenanceScreen from "./components/common/MaintenanceScreen";
 import Sidebar from "./components/common/Sidebar";
 import Topbar from "./components/common/Topbar";
 
@@ -16,6 +19,7 @@ const NetProfitMarginCalculator = lazy(() => import("./components/Calculators/Ne
 const NPVCalculator = lazy(() => import("./components/Calculators/NPVCalculator"));
 const OpportunityCostCalculator = lazy(() => import("./components/Calculators/OpportunityCostCalculator"));
 const AccountSettings = lazy(() => import("./components/Settings/AccountSettings"));
+const AdminPanel = lazy(() => import("./components/Admin/AdminPanel"));
 
 const PAGES = {
   dashboard: Dashboard,
@@ -25,7 +29,13 @@ const PAGES = {
   npv: NPVCalculator,
   opportunityCost: OpportunityCostCalculator,
   settings: AccountSettings,
+  admin: AdminPanel,
 };
+
+// Fixed Deposit is a free-trial tool (no sign-in needed), so it's the
+// landing page — visitors see a working calculator immediately instead of
+// a locked ledger.
+const DEFAULT_PAGE = "fixedDeposit";
 
 function PageSpinner() {
   return (
@@ -37,14 +47,22 @@ function PageSpinner() {
 
 export default function App() {
   const { t } = useLanguage();
-  const [page, setPage] = useState("dashboard");
+  const { isAdmin } = useAuth();
+  const { maintenanceMode, loading: configLoading } = useAppConfig();
+  const [page, setPage] = useState(DEFAULT_PAGE);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (!isFirebaseConfigured) {
     return <ConfigError />;
   }
 
-  const Page = PAGES[page] || Dashboard;
+  // Everyone except the admin sees a maintenance notice while it's enabled,
+  // so the admin can always get in to flip it back off.
+  if (!configLoading && maintenanceMode && !isAdmin) {
+    return <MaintenanceScreen />;
+  }
+
+  const Page = PAGES[page] || FixedDepositCalculator;
 
   return (
     <div className="min-h-screen bg-paper md:flex">

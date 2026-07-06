@@ -4,12 +4,14 @@ React (Vite) + Tailwind CSS frontend with a Firebase backend (Auth + Firestore),
 supporting Lao / Thai / English localization, LAK / THB / USD currencies, and
 installable as a PWA on Android, iOS, and desktop.
 
-**Sign-in model:** every page and function is visible immediately — no login
-wall on launch. Browsing, and the calculators' math, work for anyone. Only
-*saving data* (the ledger, and your account profile) requires signing in
-with Google, via the button in the top-right corner. If you're signed out,
-those sections are shown dimmed with sample data and a "Sign in" prompt
-overlaid, so you can see exactly what you'd get.
+**Access model:** the app opens straight to the **Fixed Deposit** calculator —
+no login wall. Fixed Deposit and Compound Interest are free-trial tools,
+usable by anyone. Every other function (the ledger, Net Profit Margin, NPV,
+Opportunity Cost, and saving your profile) is visible but shown dimmed with
+a "sign in to unlock" prompt until you sign in with Google, via the button
+in the top-right corner. There's also a separate **Admin** area (hidden from
+everyone except the configured admin email) for app maintenance — see
+section 10.
 
 ## 1. Setup
 
@@ -30,8 +32,10 @@ npm run dev
 
 ```
 src/
+  config/         admin.js — admin email allowlist (client-side UX check)
   context/        Auth, Language, Currency — global React context providers
-  hooks/          useLedger.js — Firestore-backed ledger + roll-over engine
+  hooks/          useLedger.js (Firestore ledger + roll-over), useAppConfig.js
+                  (maintenance mode)
   i18n/           en.json, lo.json, th.json, i18n.js — translations + t()
   utils/
     financeFormulas.js  Pure calculation engines (unit-testable, no React)
@@ -40,10 +44,12 @@ src/
     dateUtils.js        Month-key helpers for the roll-over engine
   components/
     Ledger/      Dashboard, TransactionForm, TransactionList
-    Calculators/ FixedDeposit, CompoundInterest, NetProfitMargin, NPV,
-                 OpportunityCost
+    Calculators/ FixedDeposit, CompoundInterest (free), NetProfitMargin, NPV,
+                 OpportunityCost (all three require sign-in)
     Settings/    AccountSettings
-    common/      Sidebar, Topbar, AuthGate, ConfigError, ErrorBoundary, Card
+    Admin/       AdminPanel (maintenance mode toggle, user count)
+    common/      Sidebar, Topbar, AuthGate, ConfigError, ErrorBoundary,
+                 MaintenanceScreen, Card
 ```
 
 ### Design tokens ("Finma Ledger")
@@ -177,9 +183,9 @@ Three changes address this together:
    `media="print" onload="this.media='all'"` trick, so the browser doesn't
    delay first paint waiting on them.
 
-## 9. Troubleshooting: white screen after deploying
+## 9. Troubleshooting: white screen or stuck spinner after deploying
 
-Two remaining causes to check if it still happens:
+Three causes to check if it still happens:
 
 1. **Absolute asset paths under a subfolder.** GitHub Pages serves project
    sites from `https://<user>.github.io/<repo>/`, but an absolute base
@@ -191,8 +197,68 @@ Two remaining causes to check if it still happens:
    `ConfigError` screen listing exactly which key is missing. Any other
    runtime error is caught by `ErrorBoundary.jsx` and shown on-screen with
    its stack trace (also logged to the console).
+3. **Stuck on the loading spinner forever (not a blank screen, but the
+   branded "Fin" mark spinning indefinitely).** This means `src/main.jsx`
+   never executed at all — usually because the page is serving **raw,
+   unbuilt source files** (e.g. the repository was pushed directly to the
+   Pages branch without running `npm run build` first, or GitHub Pages
+   "Source" is still set to "Deploy from a branch" instead of "GitHub
+   Actions"). Browsers can't execute `.jsx` syntax directly, so the module
+   script fails silently. `index.html` now includes a watchdog: if React
+   hasn't mounted within 8 seconds, it replaces the spinner with a
+   diagnostic message telling you to check the console. To actually fix
+   it: confirm **Settings → Pages → Source = GitHub Actions**, and confirm
+   the latest run under the **Actions** tab succeeded (green check) — if
+   you're deploying manually instead, only ever push the *contents of
+   `dist/`* (after `npm run build`), never the raw project folder.
 
-## Next steps for production
+## 10. Admin & maintenance mode
+
+`berndvh015@gmail.com` is the configured admin account (edit `src/config/admin.js`
+to add more, in both places noted below). Signing in with that Google account
+reveals a **🛠️ Admin** item in the sidebar, leading to a panel that can:
+- See the total number of registered users (`getCountFromServer` on `users`)
+- Toggle **maintenance mode** — when on, every other visitor sees a full-screen
+  "Finma is under maintenance" notice instead of the app; the admin still has
+  full access, so they can turn it back off
+
+**This is enforced in two places, and both must be updated together:**
+1. `src/config/admin.js` — `ADMIN_EMAILS` — controls what the *UI* shows (the
+   Admin nav item, panel access).
+2. `firestore.rules` — the `isAdmin()` function checks
+   `request.auth.token.email` (Google's verified email claim) — this is what
+   actually *enforces* it server-side. The client-side check alone would be
+   trivial to bypass; the Firestore rule is the real gate.
+
+Maintenance mode is stored in `app_config/global` (`{ maintenanceMode: bool }`),
+readable by anyone (so the check works before sign-in) but writable only by
+the admin. Redeploy rules after editing them:
+```bash
+firebase deploy --only firestore:rules
+```
+
+## 11. Free trial vs. full access
+
+| Page | Access |
+|---|---|
+| Fixed Deposit | Free — no sign-in |
+| Compound Interest | Free — no sign-in |
+| Net Profit Margin | Requires sign-in |
+| NPV | Requires sign-in |
+| Opportunity Cost | Requires sign-in |
+| Dashboard (ledger) | Requires sign-in (needed to save to Firestore anyway) |
+| Settings → profile/save | Requires sign-in |
+| Settings → currency/language | Free — no sign-in |
+
+This is controlled per-page by wrapping a calculator's `<Card>` in
+`<AuthGate variant="feature">` (see `AuthGate.jsx` — `variant="feature"` shows
+"sign up to unlock this tool" wording; the default `variant="data"` used on
+the Dashboard shows "sign in to save your data" instead). To make another
+calculator free, remove its `<AuthGate>` wrapper; to gate a new page, wrap it.
+The Sidebar's `NAV_ITEMS` array also has a `free: true/false` flag purely for
+the "Free" / 🔒 badges shown next to each item.
+
+
 - Add a scheduled Cloud Function to run the roll-over server-side at
   midnight on the 1st, so it doesn't depend on the app being opened that day.
 - Add automated tests for `financeFormulas.js` (Vitest) and rules tests for

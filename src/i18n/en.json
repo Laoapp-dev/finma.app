@@ -13,7 +13,8 @@
     "opportunityCost": "Opportunity Cost",
     "settings": "Settings",
     "signOut": "Sign out",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "admin": "Admin"
   },
   "auth": {
     "signInTitle": "Sign in to Finma",
@@ -22,6 +23,8 @@
     "signingIn": "Signing in…",
     "lockedTitle": "Sign in to save your data",
     "lockedSubtitle": "You can see how this works, but you'll need to sign in with Google before you can save or edit anything.",
+    "lockedTitleFeature": "Sign up to unlock this tool",
+    "lockedSubtitleFeature": "Fixed Deposit and Compound Interest are free to try. Sign in with Google to unlock every calculator and the ledger.",
     "notSignedIn": "Not signed in"
   },
   "dashboard": {
@@ -129,6 +132,21 @@
     "save": "Save",
     "delete": "Delete",
     "loading": "Loading…",
-    "total": "Total"
+    "total": "Total",
+    "freeBadge": "Free",
+    "on": "On",
+    "off": "Off"
+  },
+  "admin": {
+    "notAuthorized": "You don't have access to this page.",
+    "totalUsers": "Registered users",
+    "maintenanceMode": "Maintenance mode",
+    "maintenanceModeDesc": "When enabled, everyone except you sees a maintenance notice instead of the app. Use this while making changes or fixing something.",
+    "enableMaintenance": "Enable maintenance mode",
+    "disableMaintenance": "Disable maintenance mode"
+  },
+  "maintenance": {
+    "title": "Finma is under maintenance",
+    "body": "We're making some updates and will be back shortly. Thanks for your patience."
   }
 }
