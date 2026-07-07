@@ -78,6 +78,13 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
+    if (!isFirebaseConfigured) {
+      // Buttons that trigger this are hidden/disabled when unconfigured
+      // (see Topbar.jsx, AuthGate.jsx) — this is just a safety net so a
+      // stray call never throws "auth is undefined" at runtime.
+      console.warn("Sign-in unavailable: Firebase isn't configured.");
+      return;
+    }
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
@@ -100,12 +107,13 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    if (!isFirebaseConfigured) return;
     await firebaseSignOut(auth);
   }, []);
 
   const updateProfile = useCallback(
     async (partial) => {
-      if (!user) return;
+      if (!isFirebaseConfigured || !user) return;
       const ref = doc(db, "users", user.uid);
       await setDoc(ref, partial, { merge: true });
       setProfile((prev) => ({ ...prev, ...partial }));
@@ -116,7 +124,16 @@ export function AuthProvider({ children }) {
   const isAdmin = isAdminEmail(user?.email);
 
   const value = useMemo(
-    () => ({ user, profile, isAdmin, loading, signInWithGoogle, signOut, updateProfile }),
+    () => ({
+      user,
+      profile,
+      isAdmin,
+      loading,
+      signInWithGoogle,
+      signOut,
+      updateProfile,
+      isFirebaseConfigured,
+    }),
     [user, profile, isAdmin, loading, signInWithGoogle, signOut, updateProfile]
   );
 

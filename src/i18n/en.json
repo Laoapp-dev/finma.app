@@ -35,7 +35,10 @@
     "lockedSubtitle": "You can see how this works, but you'll need to sign in with Google before you can save or edit anything.",
     "lockedTitleFeature": "Sign up to unlock this tool",
     "lockedSubtitleFeature": "Fixed Deposit and Compound Interest are free to try. Sign in with Google to unlock every calculator and the ledger.",
-    "notSignedIn": "Not signed in"
+    "notSignedIn": "Not signed in",
+    "configUnavailableTitle": "Sign-in isn't available yet",
+    "configUnavailableSubtitle": "This app's Firebase backend hasn't been set up, so accounts and saved data aren't available right now. Free tools still work without signing in.",
+    "signInUnavailable": "Sign-in unavailable — Firebase isn't configured for this build"
   },
   "dashboard": {
     "title": "Monthly Ledger",

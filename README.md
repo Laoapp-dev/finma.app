@@ -199,10 +199,16 @@ Three causes to check if it still happens:
    `vite.config.js` — works regardless of subfolder.
 2. **A missing/misspelled Firebase secret.** If a `VITE_FIREBASE_*` value
    isn't set at build time, `initializeApp()` would throw before React
-   renders. `src/firebase.js` guards against this and `App.jsx` shows a
-   `ConfigError` screen listing exactly which key is missing. Any other
-   runtime error is caught by `ErrorBoundary.jsx` and shown on-screen with
-   its stack trace (also logged to the console).
+   renders. `src/firebase.js` guards against this so nothing crashes.
+   Rather than blocking the whole app, `App.jsx` renders normally and shows
+   a small dismissible `ConfigBanner` listing exactly which key is missing
+   — the free tools (Fixed Deposit, Compound Interest, Knowledge) and every
+   page's read-only preview work fine without Firebase, since only signing
+   in and saving data actually need it. The Sign In button (`Topbar.jsx`)
+   is disabled with an explanatory tooltip, and `AuthGate.jsx` shows "sign-in
+   isn't available yet" instead of a Google button that would silently do
+   nothing. Any other runtime error is caught by `ErrorBoundary.jsx` and
+   shown on-screen with its stack trace (also logged to the console).
 3. **Stuck on the loading spinner forever (not a blank screen, but the
    branded "Fin" mark spinning indefinitely).** This means `src/main.jsx`
    never executed at all — usually because the page is serving **raw,

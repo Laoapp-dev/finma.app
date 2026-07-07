@@ -3,7 +3,7 @@ import { useLanguage } from "./context/LanguageContext";
 import { useAuth } from "./context/AuthContext";
 import { useAppConfig } from "./hooks/useAppConfig";
 import { isFirebaseConfigured } from "./firebase";
-import ConfigError from "./components/common/ConfigError";
+import ConfigBanner from "./components/common/ConfigBanner";
 import MaintenanceScreen from "./components/common/MaintenanceScreen";
 import Sidebar from "./components/common/Sidebar";
 import Topbar from "./components/common/Topbar";
@@ -65,9 +65,12 @@ export default function App() {
   const [page, setPage] = useState(DEFAULT_PAGE);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  if (!isFirebaseConfigured) {
-    return <ConfigError />;
-  }
+  // Firebase missing is no longer a hard stop: the free tools (Fixed
+  // Deposit, Compound Interest, Knowledge) and read-only previews of every
+  // other page work fine without it — only signing in and saving data
+  // need it, and those show their own inline messaging (Topbar, AuthGate).
+  // A dismissible banner below flags the missing config without blocking
+  // anyone from using the app.
 
   // Everyone except the admin sees a maintenance notice while it's enabled,
   // so the admin can always get in to flip it back off.
@@ -86,6 +89,7 @@ export default function App() {
       <Sidebar active={page} onNavigate={navigate} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 min-w-0">
+        {!isFirebaseConfigured && <ConfigBanner />}
         <Topbar onMenuClick={() => setSidebarOpen(true)} pageTitle={t(`nav.${page}`)} />
         {/* Bottom padding on mobile so content isn't hidden behind the fixed BottomNav. */}
         <main className="max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-6">

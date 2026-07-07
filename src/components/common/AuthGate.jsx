@@ -10,10 +10,30 @@ import { useLanguage } from "../../context/LanguageContext";
  * NPV, Opportunity Cost — Fixed Deposit and Compound Interest stay free).
  */
 export default function AuthGate({ children, variant = "data" }) {
-  const { user, loading, signInWithGoogle } = useAuth();
+  const { user, loading, signInWithGoogle, isFirebaseConfigured } = useAuth();
   const { t } = useLanguage();
 
   if (loading || user) return children;
+
+  // Firebase itself isn't configured (missing build-time env vars) — sign-in
+  // isn't just "not done yet", it's not possible at all. Say so plainly
+  // instead of showing a Google button that would silently do nothing.
+  if (!isFirebaseConfigured) {
+    return (
+      <div className="relative">
+        <div className="pointer-events-none select-none opacity-40">{children}</div>
+
+        <div className="absolute inset-0 flex items-start justify-center pt-6 sm:items-center sm:pt-0">
+          <div className="card max-w-sm w-full text-center mx-4 shadow-lg">
+            <h2 className="font-display font-bold text-lg text-ink mb-1">
+              {t("auth.configUnavailableTitle")}
+            </h2>
+            <p className="text-ink/60 text-sm">{t("auth.configUnavailableSubtitle")}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const titleKey = variant === "feature" ? "auth.lockedTitleFeature" : "auth.lockedTitle";
   const subtitleKey = variant === "feature" ? "auth.lockedSubtitleFeature" : "auth.lockedSubtitle";
