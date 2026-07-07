@@ -24,9 +24,37 @@ npm run dev
 ### Firebase project setup
 1. Create a project at https://console.firebase.google.com
 2. Enable **Authentication → Sign-in method → Google**.
-3. Enable **Firestore Database** (start in production mode) and deploy the
-   included `firestore.rules`.
+3. Enable **Firestore Database** (start in production mode).
 4. Copy your web app config into `.env.local` (see `.env.example`).
+
+### GitHub Actions secrets (for automated deploys)
+
+This repo ships two workflows under `.github/workflows/`:
+
+- **`deploy.yml`** — builds the app and publishes it to GitHub Pages on
+  every push to `main`. Needs these repo secrets (**Settings → Secrets and
+  variables → Actions → Repository secrets**), one per value in
+  `.env.example`:
+  `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`,
+  `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`,
+  `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID`.
+- **`deploy-firestore-rules.yml`** — publishes `firestore.rules` /
+  `firestore.indexes.json` to your live Firestore database whenever they
+  change on `main` (or on demand via **Actions → Deploy Firestore Rules →
+  Run workflow**). This is what actually fixes a
+  **"Missing or insufficient permissions"** error in the app — a rules
+  file sitting in the repo does nothing until it's deployed. It reuses
+  `VITE_FIREBASE_PROJECT_ID` above, plus one more secret:
+  - **`FIREBASE_SERVICE_ACCOUNT`** — a service account key with permission
+    to deploy Firestore rules. Create one at **Firebase Console → ⚙️
+    Project settings → Service accounts → Generate new private key**,
+    which downloads a `.json` file. Open it, copy the *entire* JSON
+    content, and paste it as the secret's value.
+
+  Once both secrets exist, either push a change to `firestore.rules` or
+  trigger the workflow manually — after it finishes (check the **Actions**
+  tab for a green check), the "Missing or insufficient permissions" banner
+  in the app should be gone.
 
 ## 2. Architecture
 
@@ -115,11 +143,13 @@ users/{uid}/monthlyCycles/{yyyy-mm}  # { openingBalance, closed, closingBalance 
     (read-only preview) — no Firestore calls happen at all until you sign in.
 - `firestore.rules` (already included) restricts every read/write to
   `request.auth.uid == userId`, so users can only ever touch their own data.
-  Deploy it with the [Firebase CLI](https://firebase.google.com/docs/firestore/security/get-started):
+  It's deployed automatically by `.github/workflows/deploy-firestore-rules.yml`
+  on every push to `main` (see section 1's "GitHub Actions secrets"), or
+  manually with the [Firebase CLI](https://firebase.google.com/docs/firestore/security/get-started):
   ```bash
   npm install -g firebase-tools
   firebase login
-  firebase deploy --only firestore:rules
+  npm run deploy:rules
   ```
 
 **To add a new piece of saved data** (e.g. budgets, recurring bills): create
@@ -261,9 +291,9 @@ reveals a **🛠️ Admin** item in the sidebar, leading to a panel that can:
 
 Maintenance mode is stored in `app_config/global` (`{ maintenanceMode: bool }`),
 readable by anyone (so the check works before sign-in) but writable only by
-the admin. Redeploy rules after editing them:
+the admin. Rules redeploy automatically on push (see section 1), or manually:
 ```bash
-firebase deploy --only firestore:rules
+npm run deploy:rules
 ```
 
 **Note:** the signed-out state of the ledger shows a genuinely empty list
