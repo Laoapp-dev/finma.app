@@ -1,4 +1,9 @@
-const CACHE_NAME = "finma-cache-v1";
+// Bumped v1 -> v2: forces every existing installed client to purge
+// whatever it cached during the period the site was serving a broken
+// (unbuilt) deployment. The activate handler below already deletes any
+// cache key that doesn't match CACHE_NAME, so changing this string is
+// what actually triggers the cleanup once this new worker takes over.
+const CACHE_NAME = "finma-cache-v2";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
