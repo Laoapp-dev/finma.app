@@ -224,6 +224,23 @@ Three causes to check if it still happens:
    you're deploying manually instead, only ever push the *contents of
    `dist/`* (after `npm run build`), never the raw project folder.
 
+   **If you'd rather not use the GitHub Actions workflow at all** (e.g. you
+   don't have permission to change repo Settings, or Actions/Pages
+   permissions are misconfigured in your org), there's a simpler
+   branch-folder alternative that sidesteps it entirely:
+   ```bash
+   cp .env.example .env.local   # fill in your real Firebase keys
+   npm run build:docs           # builds straight into ./docs (git-tracked)
+   git add docs && git commit -m "Build for Pages" && git push
+   ```
+   Then in **Settings → Pages → Build and deployment → Source**, choose
+   **"Deploy from a branch"**, set **Branch: `main`**, **Folder: `/docs`**,
+   and save. GitHub now serves the actual built app straight out of
+   `docs/` — no Actions workflow, no secrets to configure in GitHub, no
+   subtlety about Pages "Source" settings beyond that one dropdown. Just
+   remember to re-run `npm run build:docs` and push again every time you
+   change the source, since nothing rebuilds it automatically this way.
+
 ## 10. Admin & maintenance mode
 
 `berndvh015@gmail.com` is the configured admin account (edit `src/config/admin.js`
