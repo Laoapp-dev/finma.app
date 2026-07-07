@@ -183,7 +183,8 @@
     }
   },
   "financial": {
-    "subtitle": "Record your income and expenses for this month."
+    "subtitle": "Record your income and expenses for this month.",
+    "saveFailed": "Couldn't save this transaction — check your connection and try again."
   },
   "knowledge": {
     "subtitle": "A short guide to what each calculator does and when to use it.",
@@ -250,6 +251,7 @@
     "delete": "Delete",
     "loading": "Loading…",
     "total": "Total",
+    "syncError": "Sync error — your data may not be up to date or saved: {{message}}",
     "freeBadge": "Free",
     "on": "On",
     "off": "Off"

@@ -38,22 +38,23 @@ export default function Dashboard() {
     currentBalance,
     rolloverNotice,
     clearRolloverNotice,
+    ledgerError,
   } = useLedger();
   const [chartType, setChartType] = useState("bar");
 
   const income = currentTransactions
     .filter((tx) => tx.type === "income")
-    .reduce((sum, tx) => sum + convert(Number(tx.amount) || 0, tx.currency, currency), 0);
+    .reduce((sum, tx) => sum + convert(Number(tx.amount) || 0, tx.currency || currency, currency), 0);
   const expense = currentTransactions
     .filter((tx) => tx.type === "expense")
-    .reduce((sum, tx) => sum + convert(Number(tx.amount) || 0, tx.currency, currency), 0);
+    .reduce((sum, tx) => sum + convert(Number(tx.amount) || 0, tx.currency || currency, currency), 0);
 
   // Income vs. expense totals per category, in the primary currency —
   // feeds the switchable bar/line/area/pie "infographic" below.
   const categoryData = useMemo(() => {
     const totals = {};
     currentTransactions.forEach((tx) => {
-      const amt = convert(Number(tx.amount) || 0, tx.currency, currency);
+      const amt = convert(Number(tx.amount) || 0, tx.currency || currency, currency);
       if (!totals[tx.category]) totals[tx.category] = { category: t(`dashboard.categories.${tx.category}`), income: 0, expense: 0 };
       totals[tx.category][tx.type] += amt;
     });
@@ -74,7 +75,7 @@ export default function Dashboard() {
     let running = currentCycle.openingBalance || 0;
     const points = [{ date: t("dashboard.openingBalance"), balance: round2(running) }];
     sorted.forEach((tx) => {
-      const amt = convert(Number(tx.amount) || 0, tx.currency, currency);
+      const amt = convert(Number(tx.amount) || 0, tx.currency || currency, currency);
       running += tx.type === "income" ? amt : -amt;
       points.push({ date: tx.date, balance: round2(running) });
     });
@@ -83,6 +84,12 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {ledgerError && (
+        <div className="rounded-xl bg-lotus-50 border border-lotus/30 px-4 py-3 text-sm text-lotus">
+          {t("common.syncError", { message: ledgerError })}
+        </div>
+      )}
+
       {rolloverNotice && (
         <div className="rounded-xl bg-gold-50 border border-gold-600/30 px-4 py-3 flex items-center justify-between">
           <p className="text-sm text-ink">

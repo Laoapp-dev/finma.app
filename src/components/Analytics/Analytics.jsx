@@ -13,14 +13,14 @@ const PIE_PALETTE = ["#B85C55", "#C9A227", "#2F4C7A", "#4E7D5D", "#8A6FB0", "#D9
 export default function Analytics() {
   const { t } = useLanguage();
   const { format, currency, convert } = useCurrency();
-  const { currentCycleKey, currentTransactions } = useLedger();
+  const { currentCycleKey, currentTransactions, ledgerError } = useLedger();
 
   const income = currentTransactions
     .filter((tx) => tx.type === "income")
-    .reduce((sum, tx) => sum + convert(Number(tx.amount) || 0, tx.currency, currency), 0);
+    .reduce((sum, tx) => sum + convert(Number(tx.amount) || 0, tx.currency || currency, currency), 0);
   const expense = currentTransactions
     .filter((tx) => tx.type === "expense")
-    .reduce((sum, tx) => sum + convert(Number(tx.amount) || 0, tx.currency, currency), 0);
+    .reduce((sum, tx) => sum + convert(Number(tx.amount) || 0, tx.currency || currency, currency), 0);
 
   const savingsRatePct = income === 0 ? 0 : round2(((income - expense) / income) * 100);
   const expenseRatioPct = income === 0 ? 0 : round2((expense / income) * 100);
@@ -31,7 +31,7 @@ export default function Analytics() {
     currentTransactions
       .filter((tx) => tx.type === "expense")
       .forEach((tx) => {
-        const amt = convert(Number(tx.amount) || 0, tx.currency, currency);
+        const amt = convert(Number(tx.amount) || 0, tx.currency || currency, currency);
         const label = t(`dashboard.categories.${tx.category}`);
         totals[label] = (totals[label] || 0) + amt;
       });
@@ -57,6 +57,12 @@ export default function Analytics() {
         <h1 className="font-display font-bold text-2xl text-ink">{t("nav.analytics")}</h1>
         <p className="text-ink/50 text-sm">{monthLabel(currentCycleKey)}</p>
       </div>
+
+      {ledgerError && (
+        <div className="rounded-xl bg-lotus-50 border border-lotus/30 px-4 py-3 text-sm text-lotus">
+          {t("common.syncError", { message: ledgerError })}
+        </div>
+      )}
 
       <AuthGate>
         <div className="space-y-6">

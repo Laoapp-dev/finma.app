@@ -1,3 +1,19 @@
+/**
+ * Returns today's date as "YYYY-MM-DD" in the browser's LOCAL timezone.
+ * Deliberately not `new Date().toISOString().slice(0, 10)` — that reads the
+ * UTC calendar day, which is the *previous* day for anyone in a positive UTC
+ * offset (e.g. UTC+7) during the first hours of their local day. Using that
+ * as the default date could silently file a transaction into last month's
+ * cycle instead of the current one.
+ */
+export function todayLocalISO() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 /** Returns a stable "YYYY-MM" key for grouping transactions into monthly cycles. */
 export function monthKey(date = new Date()) {
   const d = new Date(date);

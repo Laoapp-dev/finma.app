@@ -42,6 +42,14 @@ export function useLedger() {
   const [currentCycle, setCurrentCycle] = useState({ openingBalance: 0, closed: false });
   const [rolloverNotice, setRolloverNotice] = useState(null);
   const [loadingLedger, setLoadingLedger] = useState(Boolean(user));
+  // Surfaced to the UI (Financial/Dashboard/Analytics) so a failed read or
+  // write is visible instead of silently doing nothing. Previously
+  // addTransaction/deleteTransaction had no error handling at all, so a
+  // rejected Firestore write (permission error, stale auth token, offline,
+  // etc.) would fail silently — the form would still clear as if it worked,
+  // and the entry would never actually reach Firestore, so it could never
+  // show up on Dashboard/Analytics either.
+  const [ledgerError, setLedgerError] = useState(null);
 
   const ledgerRef = useCallback(
     () => collection(db, "users", user.uid, "ledgerEntries"),
@@ -90,6 +98,7 @@ export function useLedger() {
       (err) => {
         console.error("Ledger subscription failed:", err);
         setLoadingLedger(false);
+        setLedgerError(err.message || String(err));
       }
     );
 
@@ -162,19 +171,38 @@ export function useLedger() {
 
   const addTransaction = useCallback(
     async (tx) => {
-      if (!user) return; // AuthGate prevents this UI path anyway
-      await addDoc(ledgerRef(), {
-        ...tx,
-        cycleKey: monthKey(new Date(tx.date)),
-      });
+      if (!user) return false; // AuthGate prevents this UI path anyway
+      try {
+        setLedgerError(null);
+        await addDoc(ledgerRef(), {
+          ...tx,
+          cycleKey: monthKey(new Date(tx.date)),
+        });
+        return true;
+      } catch (err) {
+        // This used to be unhandled: a rejected write (permission-denied,
+        // offline, bad Firestore rules, etc.) would vanish silently and the
+        // caller had no way to know the entry never saved.
+        console.error("Failed to add transaction:", err);
+        setLedgerError(err.message || String(err));
+        return false;
+      }
     },
     [user, ledgerRef]
   );
 
   const deleteTransaction = useCallback(
     async (id) => {
-      if (!user) return;
-      await deleteDoc(doc(ledgerRef(), id));
+      if (!user) return false;
+      try {
+        setLedgerError(null);
+        await deleteDoc(doc(ledgerRef(), id));
+        return true;
+      } catch (err) {
+        console.error("Failed to delete transaction:", err);
+        setLedgerError(err.message || String(err));
+        return false;
+      }
     },
     [user, ledgerRef]
   );
@@ -189,6 +217,8 @@ export function useLedger() {
     rolloverNotice,
     clearRolloverNotice: () => setRolloverNotice(null),
     loadingLedger,
+    ledgerError,
+    clearLedgerError: () => setLedgerError(null),
     isDemo: !user,
   };
 }
