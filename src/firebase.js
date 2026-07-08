@@ -34,6 +34,14 @@ if (isFirebaseConfigured) {
   auth = getAuth(app);
   db = getFirestore(app);
   googleProvider = new GoogleAuthProvider();
+
+  // Diagnostic only — helps catch a mismatch between the project this
+  // build is actually talking to and whatever project the Firestore
+  // rules got deployed to (e.g. a typo'd VITE_FIREBASE_PROJECT_ID
+  // GitHub secret used by deploy-firestore-rules.yml). Compare this
+  // value against Project settings > General > Project ID in the
+  // Firebase console you're checking rules in.
+  console.info("[Finma] Connected Firebase project:", firebaseConfig.projectId);
 }
 
 export { app, auth, db, googleProvider };
