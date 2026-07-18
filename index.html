@@ -1,81 +1,48 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="Finma — Financial Personal Management. Track income, expenses, and investments in Lao, Thai, and English, with LAK/THB/USD support." />
-    <meta name="theme-color" content="#2F4C7A" />
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Finma — Learn English from YouTube</title>
 
-    <!-- PWA -->
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
-    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Finma" />
-    <meta name="mobile-web-app-capable" content="yes" />
+<!-- PWA / installable-on-phone support -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a3a6b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Finma">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
 
-    <title>Finma — Financial Personal Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Lao:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&display=swap"
-      media="print"
-      onload="this.media='all'"
-    />
+<!-- Free, keyless AI helper used by the admin "AI Assist" buttons (vocabulary
+     + question generation). No API key or server needed; if it can't load
+     (offline / blocked), the app falls back to a built-in keyword scan. -->
+<script src="https://js.puter.com/v2/"></script>
+</head>
+<body>
 
-    <style>
-      html, body { background: #F7F4EC; margin: 0; }
-      #shell {
-        min-height: 100vh; display: flex; flex-direction: column;
-        align-items: center; justify-content: center; gap: 12px;
-        font-family: system-ui, -apple-system, sans-serif; color: #16233D;
-      }
-      #shell .mark {
-        min-width: 56px; height: 44px; padding: 0 10px; border-radius: 12px; background: #2F4C7A;
-        color: #C9A227; display: flex; align-items: center; justify-content: center;
-        font-weight: 800; font-size: 18px; letter-spacing: 0.02em;
-      }
-      #shell .spin {
-        width: 22px; height: 22px; border-radius: 999px;
-        border: 3px solid #D7E0EE; border-top-color: #2F4C7A;
-        animation: spin 0.8s linear infinite;
-      }
-      @keyframes spin { to { transform: rotate(360deg); } }
-      #shell .diag { max-width: 440px; text-align: center; padding: 0 20px; }
-      #shell .diag h1 { font-size: 15px; font-weight: 700; margin: 0 0 6px; }
-      #shell .diag p { font-size: 13px; color: rgba(22,35,61,0.65); margin: 0 0 12px; line-height: 1.5; }
-      #shell .diag a { color: #2F4C7A; font-weight: 600; text-decoration: underline; cursor: pointer; }
-    </style>
-  </head>
-  <body class="bg-paper text-ink font-body">
-    <div id="root">
-      <div id="shell">
-        <div class="mark">Fin</div>
-        <div class="spin"></div>
-      </div>
-    </div>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="#/" class="brand">
+      <img src="icons/icon-192.png" alt="" class="brand-mark" width="28" height="28">
+      <span class="brand-name">Finma</span>
+    </a>
+    <nav id="nav" class="nav"></nav>
+  </div>
+</header>
 
-    <!-- Watchdog: if src/main.jsx never mounts React within 8s (a failed
-         module load, a build-vs-source mismatch, or a script 404 — the most
-         common causes of an infinite spinner on GitHub Pages), replace the
-         shell with a diagnostic message instead of spinning forever with no
-         explanation. main.jsx clears this once React actually renders. -->
-    <script>
-      window.__FINMA_MOUNT_TIMER__ = setTimeout(function () {
-        if (window.__FINMA_MOUNTED__) return;
-        var shell = document.getElementById("shell");
-        if (!shell) return;
-        shell.innerHTML =
-          '<div class="mark">Fin</div>' +
-          '<div class="diag">' +
-          '<h1>Finma is taking longer than expected to load</h1>' +
-          '<p>This usually means the page is serving raw source files instead of a production build, or a script failed to load. Open the browser console (F12 → Console) for the exact error, or <a onclick="location.reload()">reload the page</a>.</p>' +
-          "</div>";
-      }, 8000);
-    </script>
+<main id="app"></main>
 
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<footer class="footer">
+  <p>Finma — practice English by echoing real YouTube speech. Data lives in this browser only.</p>
+</footer>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="js/app.js"></script>
+</body>
 </html>
