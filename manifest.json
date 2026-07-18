@@ -1,18 +1,33 @@
 {
-  "name": "Finma — Learn English from YouTube",
+  "name": "Finma — Financial Personal Management",
   "short_name": "Finma",
-  "description": "Practice English by shadowing YouTube videos, drilling AI-assisted vocabulary, and answering speaking questions.",
-  "start_url": "./index.html",
+  "description": "Track income, expenses, and investments in Lao, Thai, and English, with LAK/THB/USD support.",
+  "start_url": "./",
   "scope": "./",
-  "id": "./index.html",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0f1f3d",
-  "theme_color": "#1a3a6b",
+  "background_color": "#F7F4EC",
+  "theme_color": "#2F4C7A",
+  "lang": "en",
+  "dir": "ltr",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
