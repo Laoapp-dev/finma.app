@@ -55,10 +55,10 @@ export default function NPVCalculator() {
         <div className="space-y-2 mb-4">
           {cashFlows.map((cf, idx) => (
             <div key={idx} className="flex items-center gap-2">
-              <label className="label flex-1 mb-0">{t("calculators.npv.cashFlow", { year: idx + 1 })}</label>
+              <label className="label flex-1 min-w-0 mb-0">{t("calculators.npv.cashFlow", { year: idx + 1 })}</label>
               <input
                 type="number"
-                className="input w-40"
+                className="input w-24 sm:w-40 shrink-0"
                 value={cf}
                 onChange={(e) => updateCashFlow(idx, e.target.value)}
               />

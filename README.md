@@ -123,17 +123,46 @@ of objects to CSV or `.xlsx`. The library is **dynamically imported** only
 when someone clicks an export button, keeping it out of the initial page
 load entirely.
 
-## 7. PWA & Android support
+## 7. PWA & Android support — install via browser, or as an APK
 
 Finma ships as an installable Progressive Web App:
-- `public/manifest.webmanifest` — app name, icons, theme color, standalone display mode
-- `public/icons/` — 192px/512px icons plus a maskable variant for Android's adaptive icon shape
-- `public/sw.js` — a runtime-caching service worker (network-first for navigation, stale-while-revalidate for assets), registered in `src/main.jsx`
+- `public/manifest.webmanifest` — app name, icons, theme color, standalone
+  display mode, and two shortcuts (Dashboard, Add transaction) that deep-link
+  via `?page=...`, read in `App.jsx`
+- `public/icons/` — 192px/512px icons plus a maskable variant for Android's
+  adaptive icon shape (all verified as real 192×192 / 512×512 PNGs)
+- `public/sw.js` — a runtime-caching service worker (network-first for
+  navigation, stale-while-revalidate for assets), registered in `src/main.jsx`
+- `src/components/common/InstallPrompt.jsx` — an in-app "Install Finma on
+  your phone" banner, shown once per device until dismissed or installed:
+  - **Android (Chrome/Edge/Samsung Internet):** captures the browser's
+    `beforeinstallprompt` event and shows a one-tap **Install** button —
+    no digging through browser menus required.
+  - **iOS Safari:** never fires that event (Apple doesn't expose it), so
+    instead shows the manual steps — Share icon → "Add to Home Screen".
+  - Hidden automatically once already running standalone (i.e. already
+    installed), via `display-mode: standalone` / `navigator.standalone`.
 
-On Android Chrome, visiting the deployed site shows an "Install app" / "Add
-to Home screen" prompt automatically once the manifest + service worker are
-served over HTTPS (GitHub Pages qualifies). On iOS Safari, use Share →
-"Add to Home Screen".
+Once installed, Finma opens full-screen with no browser chrome, has its own
+home-screen icon, and (thanks to the service worker) keeps working after
+the very first load even with no connection.
+
+### Building an actual installable `.apk`
+
+The manifest + service worker above already meet every requirement Android
+needs to wrap a PWA as a real installable APK (a "Trusted Web Activity") —
+no extra code needed:
+
+1. Deploy Finma (GitHub Pages, over HTTPS — required)
+2. Go to **[pwabuilder.com](https://www.pwabuilder.com)**, enter your deployed URL
+3. It scores the manifest/service worker automatically, then under
+   **"Package for stores" → Android**, generates a signed `.apk` /
+   `.aab` ready to sideload directly onto a phone or submit to the Play Store
+
+This works because PWABuilder's Android packager (Google's Bubblewrap
+under the hood) needs exactly what's already here: a valid manifest with
+`name`, icons (192 + 512 + maskable), `start_url`, `display: standalone`,
+served over HTTPS with a registered service worker.
 
 ## 8. Performance: fixing "slow to show" / white screen
 

@@ -3,6 +3,7 @@ import { useLanguage } from "./context/LanguageContext";
 import Sidebar from "./components/common/Sidebar";
 import Topbar from "./components/common/Topbar";
 import BottomNav from "./components/common/BottomNav";
+import InstallPrompt from "./components/common/InstallPrompt";
 
 // Lazy-loaded: each page's JS is only downloaded when the user actually
 // navigates to it, instead of all being bundled into the initial payload.
@@ -40,6 +41,16 @@ const PAGES = {
 
 const DEFAULT_PAGE = "dashboard";
 
+// The installed PWA's shortcut menu (long-press the app icon on Android)
+// links to "./?page=financial" and "./?page=dashboard" — read that here so
+// those shortcuts actually land on the right page instead of always
+// opening to the default.
+function initialPageFromUrl() {
+  if (typeof window === "undefined") return DEFAULT_PAGE;
+  const requested = new URLSearchParams(window.location.search).get("page");
+  return requested && PAGES[requested] ? requested : DEFAULT_PAGE;
+}
+
 function PageSpinner() {
   return (
     <div className="flex items-center justify-center py-24">
@@ -50,7 +61,7 @@ function PageSpinner() {
 
 export default function App() {
   const { t } = useLanguage();
-  const [page, setPage] = useState(DEFAULT_PAGE);
+  const [page, setPage] = useState(initialPageFromUrl);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const Page = PAGES[page] || Dashboard;
@@ -66,7 +77,8 @@ export default function App() {
       <div className="flex-1 min-w-0">
         <Topbar onMenuClick={() => setSidebarOpen(true)} pageTitle={t(`nav.${page}`)} />
         {/* Bottom padding on mobile so content isn't hidden behind the fixed BottomNav. */}
-        <main className="max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-6">
+        <main className="max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-6 space-y-4">
+          <InstallPrompt />
           <Suspense fallback={<PageSpinner />}>
             <Page />
           </Suspense>

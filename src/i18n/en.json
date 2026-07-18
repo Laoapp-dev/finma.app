@@ -242,5 +242,11 @@
   "ledgerError": {
     "title": "Couldn't save this transaction — check your connection and try again.",
     "hint": "Your browser's local storage may be full or unavailable (this can happen in some private-browsing modes). Your data is stored on this device only."
+  },
+  "install": {
+    "title": "Install Finma on your phone",
+    "androidHint": "Add it to your home screen for a full-screen, app-like experience — works offline too.",
+    "iosHint": "Tap the Share icon, then \"Add to Home Screen\".",
+    "button": "Install"
   }
 }

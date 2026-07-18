@@ -18,7 +18,7 @@ const TABS = [
   {
     key: "calculators",
     icon: "🧮",
-    // Tapping this tab jumps into the free trial calculator; it highlights
+    // Tapping this tab jumps into the first calculator; it highlights
     // whenever any calculator page is active.
     isActive: (page) => CALCULATOR_KEYS.includes(page),
     navigateTo: "fixedDeposit",
