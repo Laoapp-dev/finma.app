@@ -21,9 +21,11 @@ export default function Sidebar({ active, onNavigate, open, onClose }) {
   const content = (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-4 py-4">
-        <div className="h-9 min-w-[3rem] px-2 rounded-lg bg-indigo-600 flex items-center justify-center text-gold font-display font-bold shrink-0">
-          Fin
-        </div>
+        <img
+          src={`${import.meta.env.BASE_URL}icons/icon-192.png`}
+          alt="Finma"
+          className="h-9 w-9 rounded-lg shrink-0"
+        />
         <div className="min-w-0">
           <p className="font-display font-bold text-ink leading-tight truncate">{t("app.name")}</p>
           <p className="text-[11px] text-ink/40 leading-tight truncate">{t("app.tagline")}</p>
