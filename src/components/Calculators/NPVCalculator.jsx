@@ -4,7 +4,6 @@ import { useCurrency } from "../../context/CurrencyContext";
 import { calculateNPV } from "../../utils/financeFormulas";
 import { Card, ResultTile } from "../common/Card";
 import { exportToCsv } from "../../utils/exportData";
-import AuthGate from "../common/AuthGate";
 
 export default function NPVCalculator() {
   const { t } = useLanguage();
@@ -29,7 +28,7 @@ export default function NPVCalculator() {
   const handleExport = () => exportToCsv(result.discountedFlows, "npv-cash-flows.csv");
 
   return (
-    <AuthGate variant="feature">
+
       <Card title={t("calculators.npv.title")} subtitle={t("calculators.npv.subtitle")}>
         <div className="grid md:grid-cols-2 gap-4 mb-5">
           <div>
@@ -93,6 +92,6 @@ export default function NPVCalculator() {
           {t("dashboard.exportCsv")}
         </button>
       </Card>
-    </AuthGate>
+
   );
 }

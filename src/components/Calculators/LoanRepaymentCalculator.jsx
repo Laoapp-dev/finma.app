@@ -3,7 +3,6 @@ import { useLanguage } from "../../context/LanguageContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { calculateLoanRepayment } from "../../utils/financeFormulas";
 import { Card, ResultTile } from "../common/Card";
-import AuthGate from "../common/AuthGate";
 import { exportToCsv } from "../../utils/exportData";
 
 export default function LoanRepaymentCalculator() {
@@ -26,7 +25,7 @@ export default function LoanRepaymentCalculator() {
     );
 
   return (
-    <AuthGate variant="feature">
+
       <Card title={t("calculators.loanRepayment.title")} subtitle={t("calculators.loanRepayment.subtitle")}>
         <div className="grid md:grid-cols-3 gap-4 mb-5">
           <Field label={t("calculators.loanRepayment.principal")} value={principal} onChange={setPrincipal} />
@@ -56,7 +55,7 @@ export default function LoanRepaymentCalculator() {
           {t("dashboard.exportCsv")}
         </button>
       </Card>
-    </AuthGate>
+
   );
 }
 

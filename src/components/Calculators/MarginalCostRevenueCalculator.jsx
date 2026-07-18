@@ -3,7 +3,6 @@ import { useLanguage } from "../../context/LanguageContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { calculateMarginalCostRevenue } from "../../utils/financeFormulas";
 import { Card, ResultTile } from "../common/Card";
-import AuthGate from "../common/AuthGate";
 
 export default function MarginalCostRevenueCalculator() {
   const { t } = useLanguage();
@@ -32,7 +31,7 @@ export default function MarginalCostRevenueCalculator() {
   const verdictTone = result.verdict === "expand" ? "bamboo" : result.verdict === "reduce" ? "lotus" : "gold";
 
   return (
-    <AuthGate variant="feature">
+
       <Card
         title={t("calculators.marginalCostRevenue.title")}
         subtitle={t("calculators.marginalCostRevenue.subtitle")}
@@ -88,7 +87,7 @@ export default function MarginalCostRevenueCalculator() {
           {t(`calculators.marginalCostRevenue.verdict.${result.verdict}`)}
         </p>
       </Card>
-    </AuthGate>
+
   );
 }
 

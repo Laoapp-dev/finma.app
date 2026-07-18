@@ -3,7 +3,6 @@ import { useLanguage } from "../../context/LanguageContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { calculateOpportunityCost } from "../../utils/financeFormulas";
 import { Card, ResultTile } from "../common/Card";
-import AuthGate from "../common/AuthGate";
 
 const DEFAULT_OPTION = (name, investment, expectedReturnPct, years) => ({
   name,
@@ -22,7 +21,7 @@ export default function OpportunityCostCalculator() {
   const result = useMemo(() => calculateOpportunityCost({ chosen, foregone }), [chosen, foregone]);
 
   return (
-    <AuthGate variant="feature">
+
       <Card title={t("calculators.opportunityCost.title")} subtitle={t("calculators.opportunityCost.subtitle")}>
         <div className="grid md:grid-cols-2 gap-6 mb-5">
           <OptionForm label={t("calculators.opportunityCost.chosenLabel")} option={chosen} onChange={setChosen} t={t} />
@@ -62,7 +61,7 @@ export default function OpportunityCostCalculator() {
               })}
         </p>
       </Card>
-    </AuthGate>
+
   );
 }
 

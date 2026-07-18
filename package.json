@@ -6,14 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:docs": "vite build --outDir docs --emptyOutDir",
-    "preview": "vite preview",
-    "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes"
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "firebase": "^10.12.2",
     "xlsx": "^0.18.5",
     "recharts": "^2.12.7"
   },

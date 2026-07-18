@@ -3,7 +3,6 @@ import { useLanguage } from "../../context/LanguageContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { calculateStockROIDividend } from "../../utils/financeFormulas";
 import { Card, ResultTile } from "../common/Card";
-import AuthGate from "../common/AuthGate";
 
 export default function StockROIDividendCalculator() {
   const { t } = useLanguage();
@@ -22,7 +21,7 @@ export default function StockROIDividendCalculator() {
   const tone = result.totalReturn >= 0 ? "bamboo" : "lotus";
 
   return (
-    <AuthGate variant="feature">
+
       <Card
         title={t("calculators.stockRoiDividend.title")}
         subtitle={t("calculators.stockRoiDividend.subtitle")}
@@ -77,7 +76,7 @@ export default function StockROIDividendCalculator() {
           )}
         </div>
       </Card>
-    </AuthGate>
+
   );
 }
 

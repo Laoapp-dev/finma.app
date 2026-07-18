@@ -1,64 +1,68 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  collection,
-  doc,
-  addDoc,
-  deleteDoc,
-  setDoc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-} from "firebase/firestore";
-import { db } from "../firebase";
-import { useAuth } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { monthKey } from "../utils/dateUtils";
 
 /**
- * Firestore layout (see firestore.rules for the matching security rules):
- *   users/{uid}/ledgerEntries/{entryId}   -> one document per transaction
- *   users/{uid}/monthlyCycles/{yyyy-mm}   -> { openingBalance, closed, closingBalance }
+ * Storage layout (all in the browser's localStorage — no account, no
+ * server, nothing leaves the device):
+ *   finma.ledgerEntries -> JSON array of { id, date, type, category,
+ *                           description, amount, currency, cycleKey }
+ *   finma.monthlyCycles -> JSON object of { [yyyy-mm]: { openingBalance,
+ *                           closed, closingBalance } }
  *
- * Queries deliberately avoid filtering by cycleKey server-side (which would
- * need a composite index since it's combined with ordering) — instead we
- * subscribe to the whole ledgerEntries collection (ordered by date, a
- * single-field index Firestore creates automatically) and group by cycle
- * client-side. That's plenty fast for a personal ledger's data volume.
+ * This mirrors the previous Firestore-backed shape 1:1 so the rest of the
+ * app (Dashboard, Financial, Analytics) didn't need to change at all —
+ * only where the data lives changed, not its structure or the API this
+ * hook exposes.
+ *
+ * Trade-off worth knowing: data stays on this device/browser only. It
+ * isn't backed up automatically and won't show up if you open Finma on a
+ * different phone or after clearing browser data. Use the CSV/Excel
+ * export on the Dashboard to keep a copy if that matters to you.
  */
+
+const ENTRIES_KEY = "finma.ledgerEntries";
+const CYCLES_KEY = "finma.monthlyCycles";
 
 function round2(n) {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
 
+function readJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (err) {
+    console.error(`Failed to read ${key} from localStorage:`, err);
+    return fallback;
+  }
+}
+
+function writeJSON(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return null;
+  } catch (err) {
+    console.error(`Failed to write ${key} to localStorage:`, err);
+    return err;
+  }
+}
+
+function uid() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
 export function useLedger() {
-  const { user } = useAuth();
   const { convert, currency: primaryCurrency } = useCurrency();
 
   const currentKey = monthKey();
-  const [transactions, setTransactions] = useState([]);
-  const [currentCycle, setCurrentCycle] = useState({ openingBalance: 0, closed: false });
+  const [transactions, setTransactions] = useState(() => readJSON(ENTRIES_KEY, []));
+  const [cycles, setCycles] = useState(() => readJSON(CYCLES_KEY, {}));
   const [rolloverNotice, setRolloverNotice] = useState(null);
-  const [loadingLedger, setLoadingLedger] = useState(Boolean(user));
-  // Surfaced to the UI (Financial/Dashboard/Analytics) so a failed read or
-  // write is visible instead of silently doing nothing. Previously
-  // addTransaction/deleteTransaction had no error handling at all, so a
-  // rejected Firestore write (permission error, stale auth token, offline,
-  // etc.) would fail silently — the form would still clear as if it worked,
-  // and the entry would never actually reach Firestore, so it could never
-  // show up on Dashboard/Analytics either.
+  // Only realistic failure mode now is the browser's storage quota being
+  // full — surfaced here instead of silently doing nothing, same idea as
+  // the old Firestore error banner, just for a different underlying cause.
   const [ledgerError, setLedgerError] = useState(null);
-
-  const ledgerRef = useCallback(
-    () => collection(db, "users", user.uid, "ledgerEntries"),
-    [user]
-  );
-  const cyclesRef = useCallback(
-    () => collection(db, "users", user.uid, "monthlyCycles"),
-    [user]
-  );
 
   const netForCycle = useCallback(
     (cycleKey, txList) =>
@@ -72,92 +76,56 @@ export function useLedger() {
   );
 
   // ---------------------------------------------------------------------
-  // Signed OUT: an empty, read-only ledger. AuthGate shows the "sign in
-  // to save your data" prompt on top of it — there's no fake/demo content.
+  // Monthly roll-over: close out any still-open prior cycle(s) and carry
+  // the balance into the current month, the first time the app is opened
+  // in a given month. Runs once on mount.
   // ---------------------------------------------------------------------
   useEffect(() => {
-    if (user) return;
-    setTransactions([]);
-    setCurrentCycle({ openingBalance: 0, closed: false });
-    setLoadingLedger(false);
-  }, [user, currentKey]);
+    const allCycles = readJSON(CYCLES_KEY, {});
 
-  // ---------------------------------------------------------------------
-  // Signed IN: subscribe to Firestore + run the monthly roll-over engine.
-  // ---------------------------------------------------------------------
-  useEffect(() => {
-    if (!user) return;
-    setLoadingLedger(true);
-
-    const unsubscribe = onSnapshot(
-      query(ledgerRef(), orderBy("date", "desc")),
-      (snapshot) => {
-        setTransactions(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
-        setLoadingLedger(false);
-      },
-      (err) => {
-        console.error("Ledger subscription failed:", err);
-        setLoadingLedger(false);
-        setLedgerError(err.message || String(err));
-      }
-    );
-
-    return unsubscribe;
-  }, [user, ledgerRef]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    async function runRollover() {
-      const currentDoc = await getDoc(doc(cyclesRef(), currentKey));
-      if (currentDoc.exists()) {
-        setCurrentCycle(currentDoc.data());
-        return;
-      }
-
-      // Current month's cycle doc doesn't exist yet — close any still-open
-      // prior cycles and carry the balance forward.
-      const openSnap = await getDocs(query(cyclesRef(), where("closed", "==", false)));
-
-      if (openSnap.empty) {
-        // First time this user has ever opened the ledger.
-        const fresh = { openingBalance: 0, closed: false };
-        await setDoc(doc(cyclesRef(), currentKey), fresh);
-        setCurrentCycle(fresh);
-        return;
-      }
-
-      const allEntriesSnap = await getDocs(ledgerRef());
-      const allEntries = allEntriesSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-
-      let carryBalance = 0;
-      let lastClosedKey = null;
-
-      // Sort so cycles close in chronological order if more than one was
-      // somehow left open (e.g. the app wasn't opened for several months).
-      const openDocs = openSnap.docs.sort((a, b) => (a.id < b.id ? -1 : 1));
-
-      for (const cycleDoc of openDocs) {
-        const key = cycleDoc.id;
-        const cycleData = cycleDoc.data();
-        const net = netForCycle(key, allEntries);
-        const closingBalance = round2((cycleData.openingBalance || 0) + net);
-        await setDoc(doc(cyclesRef(), key), { ...cycleData, closed: true, closingBalance });
-        carryBalance = closingBalance;
-        lastClosedKey = key;
-      }
-
-      const newCycle = { openingBalance: carryBalance, closed: false };
-      await setDoc(doc(cyclesRef(), currentKey), newCycle);
-      setCurrentCycle(newCycle);
-
-      if (lastClosedKey) {
-        setRolloverNotice({ amount: carryBalance, fromKey: lastClosedKey });
-      }
+    if (allCycles[currentKey]) {
+      return; // current month's cycle already exists — nothing to do
     }
 
-    runRollover().catch((err) => console.error("Roll-over failed:", err));
-  }, [user, currentKey, cyclesRef, ledgerRef, netForCycle]);
+    const openKeys = Object.keys(allCycles).filter((k) => !allCycles[k].closed);
+
+    if (openKeys.length === 0) {
+      // First time the ledger has ever been opened on this device.
+      const fresh = { ...allCycles, [currentKey]: { openingBalance: 0, closed: false } };
+      writeJSON(CYCLES_KEY, fresh);
+      setCycles(fresh);
+      return;
+    }
+
+    const allEntries = readJSON(ENTRIES_KEY, []);
+    const updated = { ...allCycles };
+    let carryBalance = 0;
+    let lastClosedKey = null;
+
+    // Close cycles in chronological order in case more than one was left
+    // open (e.g. the app wasn't opened for a few months).
+    openKeys.sort().forEach((key) => {
+      const cycleData = updated[key];
+      const net = netForCycle(key, allEntries);
+      const closingBalance = round2((cycleData.openingBalance || 0) + net);
+      updated[key] = { ...cycleData, closed: true, closingBalance };
+      carryBalance = closingBalance;
+      lastClosedKey = key;
+    });
+
+    updated[currentKey] = { openingBalance: carryBalance, closed: false };
+    writeJSON(CYCLES_KEY, updated);
+    setCycles(updated);
+
+    if (lastClosedKey) {
+      setRolloverNotice({ amount: carryBalance, fromKey: lastClosedKey });
+    }
+    // Intentionally runs once per mount, not on every currentKey/netForCycle
+    // change — it's a one-time "is it a new month?" check, not a live sync.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const currentCycle = cycles[currentKey] || { openingBalance: 0, closed: false };
 
   const currentTransactions = useMemo(
     () =>
@@ -169,43 +137,28 @@ export function useLedger() {
 
   const currentBalance = round2((currentCycle.openingBalance || 0) + netForCycle(currentKey, transactions));
 
-  const addTransaction = useCallback(
-    async (tx) => {
-      if (!user) return false; // AuthGate prevents this UI path anyway
-      try {
-        setLedgerError(null);
-        await addDoc(ledgerRef(), {
-          ...tx,
-          cycleKey: monthKey(new Date(tx.date)),
-        });
-        return true;
-      } catch (err) {
-        // This used to be unhandled: a rejected write (permission-denied,
-        // offline, bad Firestore rules, etc.) would vanish silently and the
-        // caller had no way to know the entry never saved.
-        console.error("Failed to add transaction:", err);
-        setLedgerError(err.message || String(err));
-        return false;
-      }
-    },
-    [user, ledgerRef]
-  );
+  const addTransaction = useCallback(async (tx) => {
+    const entry = { ...tx, id: uid(), cycleKey: monthKey(new Date(tx.date)) };
+    const next = [entry, ...readJSON(ENTRIES_KEY, [])];
+    const err = writeJSON(ENTRIES_KEY, next);
+    if (err) {
+      setLedgerError(err);
+      throw err;
+    }
+    setTransactions(next);
+    setLedgerError(null);
+  }, []);
 
-  const deleteTransaction = useCallback(
-    async (id) => {
-      if (!user) return false;
-      try {
-        setLedgerError(null);
-        await deleteDoc(doc(ledgerRef(), id));
-        return true;
-      } catch (err) {
-        console.error("Failed to delete transaction:", err);
-        setLedgerError(err.message || String(err));
-        return false;
-      }
-    },
-    [user, ledgerRef]
-  );
+  const deleteTransaction = useCallback(async (id) => {
+    const next = readJSON(ENTRIES_KEY, []).filter((tx) => tx.id !== id);
+    const err = writeJSON(ENTRIES_KEY, next);
+    if (err) {
+      setLedgerError(err);
+      throw err;
+    }
+    setTransactions(next);
+    setLedgerError(null);
+  }, []);
 
   return {
     currentCycleKey: currentKey,
@@ -216,9 +169,8 @@ export function useLedger() {
     deleteTransaction,
     rolloverNotice,
     clearRolloverNotice: () => setRolloverNotice(null),
-    loadingLedger,
+    loadingLedger: false,
     ledgerError,
     clearLedgerError: () => setLedgerError(null),
-    isDemo: !user,
   };
 }

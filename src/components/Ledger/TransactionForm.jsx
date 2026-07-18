@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 import { useCurrency } from "../../context/CurrencyContext";
-import { todayLocalISO } from "../../utils/dateUtils";
 
 const CATEGORY_KEYS = [
   "salary",
@@ -21,7 +20,7 @@ export default function TransactionForm({ onAdd }) {
   const { currencies, currency: defaultCurrency } = useCurrency();
 
   const [form, setForm] = useState({
-    date: todayLocalISO(),
+    date: new Date().toISOString().slice(0, 10),
     type: "expense",
     category: "food",
     description: "",
@@ -29,7 +28,6 @@ export default function TransactionForm({ onAdd }) {
     currency: defaultCurrency,
   });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -37,18 +35,16 @@ export default function TransactionForm({ onAdd }) {
     e.preventDefault();
     if (!form.amount || Number(form.amount) <= 0) return;
     setSaving(true);
-    setError(null);
-    // Wait for the actual result instead of assuming success — onAdd now
-    // resolves to true/false. Only clear the form once the entry is
-    // confirmed saved, so a failed write (offline, permission error, etc.)
-    // is visible instead of looking like it worked while nothing was
-    // actually recorded.
-    const ok = await onAdd({ ...form, amount: Number(form.amount) });
-    setSaving(false);
-    if (ok) {
+    try {
+      await onAdd({ ...form, amount: Number(form.amount) });
+      // Only clear on a successful save — previously this ran
+      // unconditionally, so a failed save silently wiped what you typed
+      // with no indication anything went wrong.
       setForm((f) => ({ ...f, description: "", amount: "" }));
-    } else {
-      setError(t("financial.saveFailed"));
+    } catch {
+      // Failure is shown via the ledgerError banner above this form.
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -98,11 +94,10 @@ export default function TransactionForm({ onAdd }) {
         </select>
       </div>
 
-      <div className="col-span-2 md:col-span-6 space-y-2">
-        <button type="submit" className="btn-primary w-full md:w-auto" disabled={saving}>
-          {saving ? t("common.loading") : t("dashboard.addTransaction")}
+      <div className="col-span-2 md:col-span-6">
+        <button type="submit" disabled={saving} className="btn-primary w-full md:w-auto disabled:opacity-60">
+          {saving ? t("dashboard.saving") : t("dashboard.addTransaction")}
         </button>
-        {error && <p className="text-lotus text-sm">{error}</p>}
       </div>
     </form>
   );

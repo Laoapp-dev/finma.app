@@ -17,28 +17,11 @@
     "loanRepayment": "Loan Repayment",
     "stockRoiDividend": "Stock ROI & Dividend",
     "knowledge": "Knowledge",
-    "settings": "Settings",
-    "signOut": "Sign out",
-    "signIn": "Sign in",
-    "admin": "Admin"
+    "settings": "Settings"
   },
   "sidebarSections": {
     "calculators": "Calculators",
     "more": "More"
-  },
-  "auth": {
-    "signInTitle": "Sign in to Finma",
-    "signInSubtitle": "Track your income, expenses, and investments in one place.",
-    "signInWithGoogle": "Continue with Google",
-    "signingIn": "Signing in…",
-    "lockedTitle": "Sign in to save your data",
-    "lockedSubtitle": "You can see how this works, but you'll need to sign in with Google before you can save or edit anything.",
-    "lockedTitleFeature": "Sign up to unlock this tool",
-    "lockedSubtitleFeature": "Fixed Deposit and Compound Interest are free to try. Sign in with Google to unlock every calculator and the ledger.",
-    "notSignedIn": "Not signed in",
-    "configUnavailableTitle": "Sign-in isn't available yet",
-    "configUnavailableSubtitle": "This app's Firebase backend hasn't been set up, so accounts and saved data aren't available right now. Free tools still work without signing in.",
-    "signInUnavailable": "Sign-in unavailable — Firebase isn't configured for this build"
   },
   "dashboard": {
     "title": "Monthly Ledger",
@@ -79,7 +62,8 @@
       "education": "Education",
       "savings": "Savings",
       "other": "Other"
-    }
+    },
+    "saving": "Saving…"
   },
   "calculators": {
     "fixedDeposit": {
@@ -183,8 +167,7 @@
     }
   },
   "financial": {
-    "subtitle": "Record your income and expenses for this month.",
-    "saveFailed": "Couldn't save this transaction — check your connection and try again."
+    "subtitle": "Record your income and expenses for this month."
   },
   "knowledge": {
     "subtitle": "A short guide to what each calculator does and when to use it.",
@@ -237,13 +220,11 @@
   },
   "settings": {
     "title": "Account Settings",
-    "profile": "Profile",
     "name": "Name",
     "email": "Email",
     "primaryCurrency": "Primary currency",
     "language": "Language",
-    "save": "Save changes",
-    "saved": "Settings saved."
+    "appliedInstantly": "These preferences are saved automatically on this device."
   },
   "common": {
     "cancel": "Cancel",
@@ -251,21 +232,15 @@
     "delete": "Delete",
     "loading": "Loading…",
     "total": "Total",
-    "syncError": "Sync error — your data may not be up to date or saved: {{message}}",
-    "freeBadge": "Free",
     "on": "On",
     "off": "Off"
-  },
-  "admin": {
-    "notAuthorized": "You don't have access to this page.",
-    "totalUsers": "Registered users",
-    "maintenanceMode": "Maintenance mode",
-    "maintenanceModeDesc": "When enabled, everyone except you sees a maintenance notice instead of the app. Use this while making changes or fixing something.",
-    "enableMaintenance": "Enable maintenance mode",
-    "disableMaintenance": "Disable maintenance mode"
   },
   "maintenance": {
     "title": "Finma is under maintenance",
     "body": "We're making some updates and will be back shortly. Thanks for your patience."
+  },
+  "ledgerError": {
+    "title": "Couldn't save this transaction — check your connection and try again.",
+    "hint": "Your browser's local storage may be full or unavailable (this can happen in some private-browsing modes). Your data is stored on this device only."
   }
 }

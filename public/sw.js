@@ -1,4 +1,4 @@
-const CACHE_NAME = "finma-cache-v1";
+const CACHE_NAME = "finma-cache-v2";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -24,7 +24,7 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return; // let CDNs (fonts, Firebase) pass through
+  if (url.origin !== self.location.origin) return; // let CDNs (fonts, etc.) pass through
 
   if (request.mode === "navigate") {
     event.respondWith(

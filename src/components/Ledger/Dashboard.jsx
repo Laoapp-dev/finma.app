@@ -22,7 +22,7 @@ import { useLedger } from "../../hooks/useLedger";
 import { monthLabel } from "../../utils/dateUtils";
 import { exportLedger } from "../../utils/exportData";
 import { Card, ResultTile } from "../common/Card";
-import AuthGate from "../common/AuthGate";
+import LedgerErrorBanner from "../common/LedgerErrorBanner";
 
 const CHART_COLORS = { income: "#4E7D5D", expense: "#B85C55", balance: "#2F4C7A" };
 const PIE_PALETTE = ["#B85C55", "#C9A227", "#2F4C7A", "#4E7D5D", "#8A6FB0", "#D98E4A", "#5AA0A8", "#9B5C6B"];
@@ -39,22 +39,23 @@ export default function Dashboard() {
     rolloverNotice,
     clearRolloverNotice,
     ledgerError,
+    clearLedgerError,
   } = useLedger();
   const [chartType, setChartType] = useState("bar");
 
   const income = currentTransactions
     .filter((tx) => tx.type === "income")
-    .reduce((sum, tx) => sum + convert(Number(tx.amount) || 0, tx.currency || currency, currency), 0);
+    .reduce((sum, tx) => sum + convert(Number(tx.amount) || 0, tx.currency, currency), 0);
   const expense = currentTransactions
     .filter((tx) => tx.type === "expense")
-    .reduce((sum, tx) => sum + convert(Number(tx.amount) || 0, tx.currency || currency, currency), 0);
+    .reduce((sum, tx) => sum + convert(Number(tx.amount) || 0, tx.currency, currency), 0);
 
   // Income vs. expense totals per category, in the primary currency —
   // feeds the switchable bar/line/area/pie "infographic" below.
   const categoryData = useMemo(() => {
     const totals = {};
     currentTransactions.forEach((tx) => {
-      const amt = convert(Number(tx.amount) || 0, tx.currency || currency, currency);
+      const amt = convert(Number(tx.amount) || 0, tx.currency, currency);
       if (!totals[tx.category]) totals[tx.category] = { category: t(`dashboard.categories.${tx.category}`), income: 0, expense: 0 };
       totals[tx.category][tx.type] += amt;
     });
@@ -75,7 +76,7 @@ export default function Dashboard() {
     let running = currentCycle.openingBalance || 0;
     const points = [{ date: t("dashboard.openingBalance"), balance: round2(running) }];
     sorted.forEach((tx) => {
-      const amt = convert(Number(tx.amount) || 0, tx.currency || currency, currency);
+      const amt = convert(Number(tx.amount) || 0, tx.currency, currency);
       running += tx.type === "income" ? amt : -amt;
       points.push({ date: tx.date, balance: round2(running) });
     });
@@ -84,11 +85,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {ledgerError && (
-        <div className="rounded-xl bg-lotus-50 border border-lotus/30 px-4 py-3 text-sm text-lotus">
-          {t("common.syncError", { message: ledgerError })}
-        </div>
-      )}
+      <LedgerErrorBanner error={ledgerError} onDismiss={clearLedgerError} />
 
       {rolloverNotice && (
         <div className="rounded-xl bg-gold-50 border border-gold-600/30 px-4 py-3 flex items-center justify-between">
@@ -109,8 +106,7 @@ export default function Dashboard() {
         <p className="text-ink/50 text-sm">{monthLabel(currentCycleKey)}</p>
       </div>
 
-      <AuthGate>
-        <div className="space-y-6">
+      <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <ResultTile label={t("dashboard.currentBalance")} value={format(currentBalance)} tone="indigo" />
             <ResultTile
@@ -230,7 +226,6 @@ export default function Dashboard() {
             </div>
           </Card>
         </div>
-      </AuthGate>
     </div>
   );
 }
